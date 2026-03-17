@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/sarahandchris/Desktop/ament-app/public /Users/sarahandchris/Desktop/ament-app/app/api/booking)",
+      "Bash(cp /Users/sarahandchris/Desktop/ament-app/logo.png /Users/sarahandchris/Desktop/ament-app/public/logo.png)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
