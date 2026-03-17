@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email service not configured.' }, { status: 500 })
     }
     const resend = new Resend(apiKey)
-    const recipientEmail = process.env.BOOKING_RECIPIENT_EMAIL || 'sarah@amenthometech.com'
+    const recipientEmail = (process.env.BOOKING_RECIPIENT_EMAIL || 'chrisament45@gmail.com').split(',').map(e => e.trim())
     const fromEmail = process.env.BOOKING_FROM_EMAIL || 'onboarding@resend.dev'
 
     // Send notification to business
