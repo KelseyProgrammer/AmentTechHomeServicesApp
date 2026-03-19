@@ -1,546 +1,372 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import BookingModal from './components/BookingModal'
+import ScrollVideoSection from './components/ScrollVideoSection'
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
-type Service = { id: string; name: string; price: number }
-type Tier = {
-  tag: string
-  name: string
-  subtitle: string
-  startingAt: number
-  priceNote: string
-  featured?: boolean
-  services: Service[]
-}
-
-const TIERS: Tier[] = [
+const SERVICES_DATA = [
   {
-    tag: 'Tier 1',
+    number: 'Tier 1',
     name: 'Ament Connect',
     subtitle: 'Entertainment & Connectivity',
-    startingAt: 65,
-    priceNote: 'per service / visit',
+    from: 65,
+    featured: false,
     services: [
-      { id: 'tv-mount', name: 'TV Mounting (up to 65″)', price: 125 },
-      { id: 'tv-sound', name: 'TV + Soundbar Setup', price: 200 },
-      { id: 'wifi-setup', name: 'Wi-Fi Router Setup & Optimization', price: 125 },
-      { id: 'device-setup', name: 'Device Setup & Network Connect', price: 100 },
-      { id: 'streaming', name: 'Streaming Setup (Roku, Apple TV…)', price: 80 },
-      { id: 'cable', name: 'Cable Concealment (in-wall/raceway)', price: 150 },
-      { id: 'tech-orientation', name: 'Tech Orientation Session (1 hr)', price: 85 },
+      'TV Mounting & Soundbar Setup',
+      'Wi-Fi Router Setup & Optimization',
+      'Streaming Device Configuration',
+      'Cable Concealment (in-wall/raceway)',
+      'Device Setup & Network Connect',
+      'Tech Orientation Sessions',
     ],
   },
   {
-    tag: 'Tier 2',
+    number: 'Tier 2',
     name: 'Ament Secure',
     subtitle: 'Security & Smart Access',
-    startingAt: 100,
-    priceNote: 'per service / visit',
+    from: 100,
     featured: true,
     services: [
-      { id: 'doorbell', name: 'Video Doorbell Installation', price: 150 },
-      { id: 'camera-single', name: 'Exterior Camera (per camera)', price: 125 },
-      { id: 'camera-4pack', name: 'Full 4-Camera Package', price: 775 },
-      { id: 'smart-lock', name: 'Smart Lock Installation & Setup', price: 150 },
-      { id: 'mesh-wifi', name: 'Whole-Home Mesh Wi-Fi System', price: 287 },
-      { id: 'alarm', name: 'Alarm System Setup (SimpliSafe…)', price: 225 },
-      { id: 'net-audit', name: 'Network Security Audit & Hardening', price: 187 },
+      'Video Doorbell Installation',
+      'Exterior Camera Systems',
+      'Full 4-Camera Packages',
+      'Smart Lock Installation & Setup',
+      'Whole-Home Mesh Wi-Fi',
+      'Network Security Audit & Hardening',
     ],
   },
   {
-    tag: 'Tier 3',
+    number: 'Tier 3',
     name: 'Ament Command',
     subtitle: 'Full Automation & Pro Systems',
-    startingAt: 250,
-    priceNote: 'per service / visit',
+    from: 250,
+    featured: false,
     services: [
-      { id: 'smarthome-consult', name: 'Smart Home Consultation (2 hrs)', price: 300 },
-      { id: 'automation', name: 'Whole-Home Automation (HomeKit…)', price: 1650 },
-      { id: 'pro-cameras', name: 'Pro Camera System (NVR/DVR, 8+)', price: 2750 },
-      { id: 'access-control', name: 'Access Control (keypad/app entry)', price: 650 },
-      { id: 'str-package', name: 'STR/Airbnb Full Tech Package', price: 1275 },
-      { id: 'smarthome-training', name: 'Smart Home Training Session', price: 200 },
-      { id: 'biz-tech', name: 'Business Tech Setup (custom quote)', price: 1200 },
+      'Whole-Home Automation (HomeKit…)',
+      'Pro NVR/DVR Camera Systems',
+      'Smart Home Consultation',
+      'Access Control Systems',
+      'STR / Airbnb Full Tech Package',
+      'Business Tech Setup',
     ],
   },
 ]
 
-const CARE_PLANS = [
+const PLANS_DATA = [
   {
-    id: 'connect',
     name: 'Connect Care',
-    price: '$29/mo or $299/yr',
-    perks: 'Priority scheduling · 10% off labor · Annual remote check-in',
+    price: '$29',
+    period: '/mo',
+    annual: 'or $299/yr',
+    perks: [
+      'Priority scheduling',
+      '10% off all labor',
+      'Annual remote check-in',
+      'Dedicated support line',
+    ],
   },
   {
-    id: 'secure',
     name: 'Secure Care',
-    price: '$59/mo or $599/yr',
-    perks: 'All above · Annual on-site inspection · Firmware updates',
+    price: '$59',
+    period: '/mo',
+    annual: 'or $599/yr',
+    perks: [
+      'All Connect Care benefits',
+      'Annual on-site inspection',
+      'Firmware & software updates',
+      'Camera health monitoring',
+    ],
   },
   {
-    id: 'command',
     name: 'Command Care',
-    price: '$99/mo or $999/yr',
-    perks: 'All above · Quarterly visits · 24hr response guarantee',
+    price: '$99',
+    period: '/mo',
+    annual: 'or $999/yr',
+    perks: [
+      'All Secure Care benefits',
+      'Quarterly on-site visits',
+      '24-hour response guarantee',
+      'Full system optimization',
+    ],
   },
 ]
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+const TRUST_ITEMS = [
+  { icon: '⚡', title: 'Same-Week Availability', sub: 'Fast scheduling, no long waits' },
+  { icon: '🔒', title: 'Licensed & Insured', sub: 'Fully covered for your peace of mind' },
+  { icon: '⭐', title: '5-Star Rated', sub: 'Consistent excellence, every visit' },
+  { icon: '🏠', title: 'Locally Owned', sub: 'Proud to serve Greater St. Augustine' },
+]
 
-type CartItem = { name: string; price: number }
-type Cart = Record<string, CartItem>
+// ─── Landing Page ─────────────────────────────────────────────────────────────
 
-type FormData = {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  address: string
-  propertyType: string
-  preferredDate: string
-  notes: string
-  hearAbout: string
-}
+export default function LandingPage() {
+  const [modalOpen, setModalOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
-// ─── Component ────────────────────────────────────────────────────────────────
+  // Solid nav after scrolling past hero
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
-export default function BookingApp() {
-  const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [cart, setCart] = useState<Cart>({})
-  const [carePlan, setCarePlan] = useState<string | null>(null)
-  const [carePlanSkipped, setCarePlanSkipped] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState('')
-  const [form, setForm] = useState<FormData>({
-    firstName: '', lastName: '', email: '', phone: '',
-    address: '', propertyType: '', preferredDate: '', notes: '', hearAbout: '',
-  })
-  const cartRef = useRef<HTMLDivElement>(null)
-
-  const cartItems = Object.values(cart)
-  const cartTotal = cartItems.reduce((s, i) => s + i.price, 0)
-  const cartCount = cartItems.length
-
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const minDate = tomorrow.toISOString().split('T')[0]
-
-  function toggleService(id: string, name: string, price: number) {
-    setCart(prev => {
-      const next = { ...prev }
-      if (next[id]) {
-        delete next[id]
-      } else {
-        next[id] = { name, price }
-      }
-      return next
-    })
-  }
-
-  function removeFromCart(id: string) {
-    setCart(prev => {
-      const next = { ...prev }
-      delete next[id]
-      return next
-    })
-  }
-
-  function scrollToCart() {
-    cartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setSubmitting(true)
-    setSubmitError('')
-
-    const payload = {
-      ...form,
-      services: cartItems.map(i => ({ name: i.name, price: i.price })),
-      total: cartTotal,
-      carePlan,
-    }
-
-    try {
-      const res = await fetch('/api/booking', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Submission failed. Please try again.')
-      }
-      setStep(3)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    } catch (err: unknown) {
-      setSubmitError(err instanceof Error ? err.message : 'Something went wrong.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const formattedDate = form.preferredDate
-    ? new Date(form.preferredDate + 'T12:00:00').toLocaleDateString('en-US', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-      })
-    : 'To be confirmed'
-
-  const carePlanLabel = carePlan
-    ? `Ament ${carePlan.charAt(0).toUpperCase() + carePlan.slice(1)} Care Plan`
-    : 'None'
+  // Scroll-triggered reveal animation
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    )
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <>
-      {/* HEADER */}
-      <header>
-        <div className="header-inner">
-          <div className="logo-wrap">
-            <Image src="/logo.png" alt="Ament Logo" width={90} height={60} style={{ borderRadius: 6, background: '#fff', padding: 4, objectFit: 'contain' }} />
-            <div className="logo-text">
-              <span className="brand">AMENT</span>
-              <span className="tagline">Home &amp; Tech Services</span>
-            </div>
-          </div>
-          <div className="header-cta">
-            <a href="tel:+14079208035" className="phone-link">📞 (407) 920-8035</a>
+      {/* ── FLOATING NAV ── */}
+      <nav className={`lp-nav ${scrolled ? 'lp-nav--scrolled' : ''}`}>
+        <div className="logo-wrap">
+          <Image
+            src="/logo.png"
+            alt="Ament"
+            width={48}
+            height={48}
+            style={{ borderRadius: 6, background: '#fff', padding: 3, objectFit: 'contain' }}
+          />
+          <div className="logo-text">
+            <span className="brand">AMENT</span>
+            <span className="tagline">Home &amp; Tech Services</span>
           </div>
         </div>
-      </header>
+        <div className="lp-nav-links">
+          <a href="#services">Services</a>
+          <a href="#how-it-works">How It Works</a>
+          <a href="#care-plans">Care Plans</a>
+          <a href="tel:+14079208035">(407) 920-8035</a>
+        </div>
+        <button className="lp-nav-cta" onClick={() => setModalOpen(true)}>
+          Book a Service
+        </button>
+      </nav>
 
-      {/* HERO */}
-      <div className="hero">
-        <h1>
-          Expert Smart Home &amp; Tech Services<br />
-          <em>for Greater St. Augustine</em>
-        </h1>
-        <p>From TV mounting to whole-home automation — we make your technology work for you.</p>
-        <div className="hero-badges">
-          <span className="badge">⚡ Same-Week Availability</span>
-          <span className="badge">🔒 Licensed &amp; Insured</span>
-          <span className="badge">⭐ 5-Star Rated</span>
-          <span className="badge">🏠 Locally Owned</span>
+      {/* ── SCROLL VIDEO HERO ── */}
+      <ScrollVideoSection
+        frameDir="/frames/house"
+        frameCount={121}
+        title={<>Built Into<br />Every Layer</>}
+        body="Behind every wall and above every ceiling, Ament designs smart home systems that disappear into your home — until the moment you need them."
+        onBook={() => setModalOpen(true)}
+        showScrollCue
+        isHero
+      />
+
+      {/* ── SCROLL VIDEO SECTION 2 ── */}
+      <ScrollVideoSection
+        frameDir="/frames/devices"
+        frameCount={121}
+        title={<>Every Device,<br />One Ecosystem</>}
+        body="From your doorbell to your thermostat, Ament connects your home's technology into a single intelligent system — installed right, the first time."
+        onBook={() => setModalOpen(true)}
+      />
+
+      {/* ── TRUST STRIP ── */}
+      <div className="lp-trust">
+        <div className="lp-trust-inner">
+          {TRUST_ITEMS.map(item => (
+            <div key={item.title} className="lp-trust-item">
+              <div className="lp-trust-icon">{item.icon}</div>
+              <div className="lp-trust-text">
+                <strong>{item.title}</strong>
+                <span>{item.sub}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* MAIN */}
-      <div className="main">
-        {/* PROGRESS BAR */}
-        <div className="progress-bar">
-          <div className="progress-step">
-            <div className={`step-circle ${step === 1 ? 'active' : step > 1 ? 'done' : ''}`}>
-              {step > 1 ? '✓' : '1'}
-            </div>
-            <span className={`step-label ${step === 1 ? 'active' : ''}`}>Services</span>
+      {/* ── SERVICES ── */}
+      <section className="lp-services" id="services">
+        <div className="lp-section-inner">
+          <div className="reveal">
+            <div className="lp-eyebrow">What We Do</div>
+            <h2 className="lp-section-title">Services Tailored<br />to Your Home</h2>
+            <p className="lp-section-sub">
+              Three tiers, one trusted team. Mix and match services across any tier
+              to build your perfect installation.
+            </p>
           </div>
-          <div className={`step-connector ${step > 1 ? 'done' : ''}`} />
-          <div className="progress-step">
-            <div className={`step-circle ${step === 2 ? 'active' : step > 2 ? 'done' : ''}`}>
-              {step > 2 ? '✓' : '2'}
-            </div>
-            <span className={`step-label ${step === 2 ? 'active' : ''}`}>Your Details</span>
-          </div>
-          <div className={`step-connector ${step > 2 ? 'done' : ''}`} />
-          <div className="progress-step">
-            <div className={`step-circle ${step === 3 ? 'active' : ''}`}>3</div>
-            <span className={`step-label ${step === 3 ? 'active' : ''}`}>Confirmation</span>
-          </div>
-        </div>
-
-        {/* ── STEP 1: SERVICE SELECTION ── */}
-        {step === 1 && (
-          <div id="step1">
-            <p className="section-title">Select Your Services</p>
-            <p className="section-sub">Choose from our three service tiers — mix and match anything below.</p>
-
-            <div className="tier-grid">
-              {TIERS.map(tier => (
-                <div key={tier.tag} className={`tier-card ${tier.featured ? 'featured' : ''}`}>
-                  {tier.featured && <div className="tier-badge-featured">Most Popular</div>}
-                  <div className="tier-header">
-                    <div className="tier-tag">{tier.tag}</div>
-                    <div className="tier-name">{tier.name}</div>
-                    <div className="tier-subtitle">{tier.subtitle}</div>
+          <div className="lp-tier-bento">
+            {SERVICES_DATA.map((tier, i) => (
+              <div
+                key={tier.name}
+                className={`lp-tier-card${tier.featured ? ' lp-tier-card--featured' : ''} reveal reveal-delay-${i + 1}`}
+              >
+                <div className="lp-tier-card-header">
+                  {tier.featured && <div className="lp-tier-featured-badge">Most Popular</div>}
+                  <div className="lp-tier-number">{tier.number}</div>
+                  <div className="lp-tier-name">{tier.name}</div>
+                  <div className="lp-tier-subtitle">{tier.subtitle}</div>
+                </div>
+                <div className="lp-tier-card-body">
+                  <ul className="lp-tier-list">
+                    {tier.services.map(s => <li key={s}>{s}</li>)}
+                  </ul>
+                  <div className="lp-tier-price-row">
+                    <span className="lp-tier-from">From</span>
+                    <span className="lp-tier-price">${tier.from}</span>
+                    <span className="lp-tier-price-note">per service</span>
                   </div>
-                  <div className="tier-price">
-                    <span className="price-from">From</span>
-                    <span className="price-amount">${tier.startingAt}</span>
-                    <span className="price-note">{tier.priceNote}</span>
-                  </div>
-                  <div className="tier-services">
-                    {tier.services.map(svc => (
-                      <div
-                        key={svc.id}
-                        className={`service-item ${cart[svc.id] ? 'selected' : ''}`}
-                        onClick={() => toggleService(svc.id, svc.name, svc.price)}
-                      >
-                        <div className="service-check">{cart[svc.id] ? '✓' : ''}</div>
-                        <div className="service-name">{svc.name}</div>
-                        <div className="service-price">From ${svc.price.toLocaleString()}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    className="tier-select-btn"
-                    onClick={() => {
-                      tier.services.forEach(svc => {
-                        if (!cart[svc.id]) toggleService(svc.id, svc.name, svc.price)
-                      })
-                    }}
-                  >
-                    Select All {tier.name}
+                  <button className="lp-tier-cta" onClick={() => setModalOpen(true)}>
+                    Book {tier.name} →
                   </button>
                 </div>
-              ))}
-            </div>
-
-            {/* CART PANEL */}
-            {(cartCount > 0) && (
-              <div ref={cartRef} className="cart-panel">
-                <div className="cart-title">🛒 Your Selected Services</div>
-                <div className="cart-items">
-                  {cartItems.map((item, i) => {
-                    const id = Object.keys(cart)[i]
-                    return (
-                      <div key={id} className="cart-item">
-                        <span className="cart-item-name">{item.name}</span>
-                        <span className="cart-item-right">
-                          <span className="cart-item-price">From ${item.price.toLocaleString()}</span>
-                          <button className="cart-remove" onClick={() => removeFromCart(id)}>×</button>
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-                <div className="cart-total">
-                  <span>Estimated Starting Total</span>
-                  <span className="cart-total-amount">${cartTotal.toLocaleString()}</span>
-                </div>
               </div>
-            )}
-
-            {/* PROCEED BUTTON */}
-            <div style={{ textAlign: 'center', marginTop: 8 }}>
-              <button
-                className="submit-btn"
-                disabled={cartCount === 0}
-                onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-              >
-                Continue to Booking Details →
-              </button>
-              <p style={{ marginTop: 12, fontSize: 13, color: 'var(--text-light)' }}>
-                We&apos;ll follow up to confirm your appointment time.
-              </p>
-            </div>
+            ))}
           </div>
-        )}
+        </div>
+      </section>
 
-        {/* ── STEP 2: BOOKING FORM ── */}
-        {step === 2 && (
-          <div id="step2">
-            <p className="section-title">Your Details</p>
-            <p className="section-sub">Tell us a bit about yourself and we&apos;ll reach out to schedule your visit.</p>
+      {/* ── HOW IT WORKS ── */}
+      <section className="lp-hiw" id="how-it-works">
+        <div className="lp-section-inner">
+          <div className="reveal lp-hiw-header">
+            <div className="lp-eyebrow">Simple Process</div>
+            <h2 className="lp-section-title">From Inquiry<br />to Installation</h2>
+            <p className="lp-section-sub lp-section-sub--center">
+              We keep things simple. Three easy steps and your home is upgraded.
+            </p>
+          </div>
+          <div className="lp-hiw-steps">
+            {[
+              {
+                n: '1',
+                title: 'Select Your Services',
+                desc: 'Browse our service tiers and build your custom installation list. Mix and match anything across all three tiers.',
+              },
+              {
+                n: '2',
+                title: 'We Reach Out & Schedule',
+                desc: 'Sarah will contact you within 24 hours to confirm your appointment window and answer any questions.',
+              },
+              {
+                n: '3',
+                title: 'We Install. You Relax.',
+                desc: 'Our expert technician arrives on time, completes the job cleanly, and walks you through everything when finished.',
+              },
+            ].map((step, i) => (
+              <div key={step.n} className={`lp-hiw-step reveal reveal-delay-${i + 1}`}>
+                <div className="lp-hiw-number">{step.n}</div>
+                <h3 className="lp-hiw-step-title">{step.title}</h3>
+                <p className="lp-hiw-step-desc">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {/* CARE PLAN UPSELL */}
-            {!carePlanSkipped && (
-              <div className="care-plan-box">
-                <div className="care-plan-title">⭐ Add an Ament Care Plan</div>
-                <div className="care-plan-desc">
-                  Priority scheduling, discounted labor, and proactive system check-ins — cancel anytime.
+      {/* ── CARE PLANS ── */}
+      <section className="lp-plans" id="care-plans">
+        <div className="lp-section-inner">
+          <div className="reveal">
+            <div className="lp-eyebrow lp-eyebrow--light">Ongoing Support</div>
+            <h2 className="lp-section-title lp-section-title--light">Protect Your Investment</h2>
+            <p className="lp-section-sub lp-section-sub--light">
+              Keep your smart home running perfectly with an Ament Care Plan.
+              Priority service, proactive check-ins, cancel any time.
+            </p>
+          </div>
+          <div className="lp-plans-grid">
+            {PLANS_DATA.map((plan, i) => (
+              <div key={plan.name} className={`lp-plan-card reveal reveal-delay-${i + 1}`}>
+                <div className="lp-plan-name">{plan.name}</div>
+                <div className="lp-plan-price">
+                  {plan.price}<span className="lp-plan-period">{plan.period}</span>
                 </div>
-                <div className="care-plans">
-                  {CARE_PLANS.map(plan => (
-                    <div
-                      key={plan.id}
-                      className={`care-plan-option ${carePlan === plan.id ? 'selected' : ''}`}
-                      onClick={() => setCarePlan(prev => prev === plan.id ? null : plan.id)}
-                    >
-                      <div className="care-plan-name">{plan.name}</div>
-                      <div className="care-plan-price">{plan.price}</div>
-                      <div className="care-plan-perks">{plan.perks}</div>
-                    </div>
-                  ))}
-                </div>
-                <button className="care-plan-skip" onClick={() => { setCarePlanSkipped(true); setCarePlan(null) }}>
-                  No thanks, not right now
+                <div className="lp-plan-annual">{plan.annual}</div>
+                <ul className="lp-plan-perks">
+                  {plan.perks.map(p => <li key={p}>{p}</li>)}
+                </ul>
+                <button className="lp-plan-cta" onClick={() => setModalOpen(true)}>
+                  Get Started →
                 </button>
               </div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label htmlFor="firstName">First Name *</label>
-                  <input
-                    id="firstName" type="text" required placeholder="Chris"
-                    value={form.firstName}
-                    onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="lastName">Last Name *</label>
-                  <input
-                    id="lastName" type="text" required placeholder="Smith"
-                    value={form.lastName}
-                    onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="email">Email Address *</label>
-                  <input
-                    id="email" type="email" required placeholder="you@email.com"
-                    value={form.email}
-                    onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="phone">Phone Number *</label>
-                  <input
-                    id="phone" type="tel" required placeholder="(407) 920-8035"
-                    value={form.phone}
-                    onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                  />
-                </div>
-                <div className="form-group full">
-                  <label htmlFor="address">Service Address *</label>
-                  <input
-                    id="address" type="text" required placeholder="123 Palm Ave, St. Augustine, FL 32080"
-                    value={form.address}
-                    onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="propertyType">Property Type</label>
-                  <select
-                    id="propertyType"
-                    value={form.propertyType}
-                    onChange={e => setForm(f => ({ ...f, propertyType: e.target.value }))}
-                  >
-                    <option value="">Select type...</option>
-                    <option>Primary Residence</option>
-                    <option>Short-Term Rental / Airbnb</option>
-                    <option>Vacation Home</option>
-                    <option>Small Business / Office</option>
-                    <option>New Construction</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="preferredDate">Preferred Date</label>
-                  <input
-                    id="preferredDate" type="date" min={minDate}
-                    value={form.preferredDate}
-                    onChange={e => setForm(f => ({ ...f, preferredDate: e.target.value }))}
-                  />
-                </div>
-                <div className="form-group full">
-                  <label htmlFor="notes">Additional Notes</label>
-                  <textarea
-                    id="notes"
-                    placeholder="Any details about your home, specific concerns, or questions for our team..."
-                    value={form.notes}
-                    onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                  />
-                </div>
-                <div className="form-group full">
-                  <label htmlFor="hearAbout">How did you hear about us?</label>
-                  <select
-                    id="hearAbout"
-                    value={form.hearAbout}
-                    onChange={e => setForm(f => ({ ...f, hearAbout: e.target.value }))}
-                  >
-                    <option value="">Select...</option>
-                    <option>Nextdoor</option>
-                    <option>Google Search</option>
-                    <option>Facebook / Social Media</option>
-                    <option>Friend or Neighbor Referral</option>
-                    <option>Yard Sign / Flyer</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-              </div>
-
-              {submitError && <div className="error-msg">⚠️ {submitError}</div>}
-
-              <button type="submit" className="submit-btn" disabled={submitting}>
-                {submitting ? <span className="loading-spinner" /> : '📋'}
-                {submitting ? 'Submitting…' : 'Request My Appointment'}
-              </button>
-            </form>
+            ))}
           </div>
-        )}
+        </div>
+      </section>
 
-        {/* ── STEP 3: CONFIRMATION ── */}
-        {step === 3 && (
-          <div className="confirmation">
-            <div className="confirm-icon">✅</div>
-            <div className="confirm-title">Request Received!</div>
-            <div className="confirm-sub">
-              Thank you for choosing Ament Home &amp; Tech Services.<br />
-              Sarah will reach out within 24 hours to confirm your appointment.
+      {/* ── CTA BAND ── */}
+      <section className="lp-cta">
+        <div className="lp-cta-inner reveal">
+          <h2 className="lp-cta-title">
+            Ready to Upgrade<br />
+            <em>Your Home?</em>
+          </h2>
+          <p className="lp-cta-sub">
+            Join hundreds of St. Augustine homeowners who trust Ament for
+            expert, reliable smart home technology.
+          </p>
+          <div className="lp-cta-actions">
+            <button className="lp-btn-primary-dark" onClick={() => setModalOpen(true)}>
+              Book a Service Today →
+            </button>
+            <a href="tel:+14079208035" className="lp-btn-ghost-dark">
+              Call (407) 920-8035
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="lp-footer">
+        <div className="lp-section-inner">
+          <div className="lp-footer-grid">
+            <div>
+              <div className="lp-footer-brand-name">AMENT</div>
+              <div className="lp-footer-brand-tag">Home &amp; Tech Services</div>
+              <p className="lp-footer-tagline">
+                Expert smart home technology installation and ongoing support
+                serving Greater St. Augustine, Florida.
+              </p>
             </div>
-            <div className="confirm-details">
-              <div className="confirm-row">
-                <span className="confirm-label">Name</span>
-                <span className="confirm-value">{form.firstName} {form.lastName}</span>
-              </div>
-              <div className="confirm-row">
-                <span className="confirm-label">Email</span>
-                <span className="confirm-value">{form.email}</span>
-              </div>
-              <div className="confirm-row">
-                <span className="confirm-label">Phone</span>
-                <span className="confirm-value">{form.phone}</span>
-              </div>
-              <div className="confirm-row">
-                <span className="confirm-label">Address</span>
-                <span className="confirm-value">{form.address}</span>
-              </div>
-              {form.propertyType && (
-                <div className="confirm-row">
-                  <span className="confirm-label">Property Type</span>
-                  <span className="confirm-value">{form.propertyType}</span>
-                </div>
-              )}
-              <div className="confirm-row">
-                <span className="confirm-label">Services</span>
-                <span className="confirm-value" style={{ textAlign: 'right', maxWidth: '60%' }}>
-                  {cartItems.map(i => i.name).join(', ')}
-                </span>
-              </div>
-              <div className="confirm-row">
-                <span className="confirm-label">Est. Starting Price</span>
-                <span className="confirm-value">From ${cartTotal.toLocaleString()}</span>
-              </div>
-              <div className="confirm-row">
-                <span className="confirm-label">Care Plan</span>
-                <span className="confirm-value">{carePlanLabel}</span>
-              </div>
-              <div className="confirm-row">
-                <span className="confirm-label">Preferred Date</span>
-                <span className="confirm-value">{formattedDate}</span>
-              </div>
+            <div>
+              <div className="lp-footer-col-title">Services</div>
+              <ul className="lp-footer-links">
+                <li><a href="#services">Ament Connect</a></li>
+                <li><a href="#services">Ament Secure</a></li>
+                <li><a href="#services">Ament Command</a></li>
+                <li><a href="#care-plans">Care Plans</a></li>
+              </ul>
+            </div>
+            <div>
+              <div className="lp-footer-col-title">Contact</div>
+              <ul className="lp-footer-links">
+                <li><a href="tel:+14079208035">(407) 920-8035</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li>St. Augustine, FL 32080</li>
+              </ul>
             </div>
           </div>
-        )}
-      </div>
-
-      {/* FLOATING CART FAB */}
-      {step === 1 && cartCount > 0 && (
-        <button className="cart-fab" onClick={scrollToCart}>
-          <span>🛒 Your Services</span>
-          <span className="cart-count">{cartCount}</span>
-        </button>
-      )}
-
-      {/* FOOTER */}
-      <footer>
-        <p>© 2025 Ament Home &amp; Tech Services · Greater St. Augustine, FL · <a href="tel:+14079208035">(407) 920-8035</a></p>
-        <p style={{ marginTop: 6 }}>Licensed &amp; Insured · Smarter Living, Made Simple.</p>
+          <hr className="lp-footer-divider" />
+          <div className="lp-footer-bottom">
+            <span>© 2025 Ament Home &amp; Tech Services · Licensed &amp; Insured</span>
+            <span>Smarter Living, Made Simple.</span>
+          </div>
+        </div>
       </footer>
+
+      {/* BOOKING MODAL */}
+      <BookingModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
     </>
   )
 }

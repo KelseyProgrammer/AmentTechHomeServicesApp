@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Ament Home & Tech Services — Book a Service',
-  description: 'Book expert smart home, AV, and security services in Greater St. Augustine, FL.',
+  title: 'Ament Home & Tech Services — St. Augustine, FL',
+  description: 'Expert smart home installation, AV, and security services in Greater St. Augustine, FL. TV mounting, automation, cameras, mesh Wi-Fi, and more.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
