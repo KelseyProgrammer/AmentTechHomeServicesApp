@@ -154,22 +154,22 @@ export default function ScrollVideoSection({
           />
         </div>
 
-        {/* ── Scrim: base tint ── */}
+        {/* ── Scrim: base tint — just enough to desaturate harsh highlights ── */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'rgba(4,9,15,0.40)',
+          background: 'rgba(4,9,15,0.18)',
         }} />
 
-        {/* ── Scrim: bottom-heavy gradient so text is always legible ── */}
+        {/* ── Scrim: bottom gradient — tight, only covers text zone ── */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'linear-gradient(to top, rgba(4,9,15,0.92) 0%, rgba(4,9,15,0.62) 28%, rgba(4,9,15,0.08) 56%, transparent 70%)',
+          background: 'linear-gradient(to top, rgba(4,9,15,0.88) 0%, rgba(4,9,15,0.55) 18%, rgba(4,9,15,0.10) 38%, transparent 52%)',
         }} />
 
         {/* ── Scrim: top edge ── */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'linear-gradient(to bottom, rgba(4,9,15,0.55) 0%, transparent 18%)',
+          background: 'linear-gradient(to bottom, rgba(4,9,15,0.40) 0%, transparent 14%)',
         }} />
 
         {/* ── Text — anchored bottom-center ── */}
