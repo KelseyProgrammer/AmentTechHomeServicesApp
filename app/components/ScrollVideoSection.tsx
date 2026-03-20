@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 
 interface Props {
   frameDir:       string        // e.g. '/frames/house'
@@ -14,7 +14,7 @@ interface Props {
   isHero?:        boolean
 }
 
-export default function ScrollVideoSection({
+function ScrollVideoSection({
   frameDir,
   frameCount,
   eyebrow = 'Ament Home & Tech Services',
@@ -35,27 +35,52 @@ export default function ScrollVideoSection({
     const ctx    = canvas?.getContext('2d')
     if (!canvas || !ctx) return
 
-    // ── Preload frames as ImageBitmaps (GPU-decoded, zero-cost drawImage) ──────
+    // ── Frame loading ──────────────────────────────────────────────────────────
     const bitmaps: ImageBitmap[] = new Array(frameCount)
     let loadedCount = 0
     let ready = false
+    let loadStarted = false
 
-    for (let i = 1; i <= frameCount; i++) {
-      const n = String(i).padStart(3, '0')
-      fetch(`${frameDir}/frame_${n}.jpg`)
-        .then(r => r.blob())
-        .then(blob => createImageBitmap(blob))
-        .then(bmp => {
-          bitmaps[i - 1] = bmp
-          loadedCount++
-          if (loadedCount === frameCount) {
-            ready = true
-            sizeCanvas()
-            drawFrame(currentProgress)
-            const wrap = canvasWrapRef.current
-            if (wrap) wrap.style.opacity = '1'
+    function startFrameLoad() {
+      if (loadStarted) return
+      loadStarted = true
+      for (let i = 1; i <= frameCount; i++) {
+        const n = String(i).padStart(3, '0')
+        fetch(`${frameDir}/frame_${n}.jpg`)
+          .then(r => r.blob())
+          .then(blob => createImageBitmap(blob))
+          .then(bmp => {
+            bitmaps[i - 1] = bmp
+            loadedCount++
+            if (loadedCount === frameCount) {
+              ready = true
+              sizeCanvas()
+              drawFrame(currentProgress)
+              const wrap = canvasWrapRef.current
+              if (wrap) wrap.style.opacity = '1'
+            }
+          })
+      }
+    }
+
+    // Hero: load immediately (in viewport on page load).
+    // Other sections: defer until the section is 150vh away — frames finish
+    // loading well before the user scrolls to them, with zero impact on initial load.
+    let loadObserver: IntersectionObserver | null = null
+    if (isHero) {
+      startFrameLoad()
+    } else {
+      loadObserver = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            startFrameLoad()
+            loadObserver?.disconnect()
+            loadObserver = null
           }
-        })
+        },
+        { rootMargin: '150% 0px' }
+      )
+      if (containerRef.current) loadObserver.observe(containerRef.current)
     }
 
     // ── Canvas sizing ──────────────────────────────────────────────────────────
@@ -92,38 +117,56 @@ export default function ScrollVideoSection({
     // ── Scroll + rAF loop ──────────────────────────────────────────────────────
     let targetProgress  = 0
     let currentProgress = 0
-    let rafId: number
-    let visible = true
+    let rafId = 0
+    let visible = false
 
-    function onScroll() {
+    // Cache container offsets — only recalculate on resize, not every scroll tick
+    let containerTop    = 0
+    let scrollableHeight = 0
+
+    function updateDimensions() {
       const container = containerRef.current
       if (!container) return
-      const rect       = container.getBoundingClientRect()
-      const scrollable = container.offsetHeight - window.innerHeight
-      targetProgress   = Math.min(1, Math.max(0, -rect.top / scrollable))
+      const rect = container.getBoundingClientRect()
+      containerTop     = rect.top + window.scrollY
+      scrollableHeight = container.offsetHeight - window.innerHeight
+    }
+
+    function onScroll() {
+      if (scrollableHeight === 0) return
+      // window.scrollY is free (no forced layout)
+      const scrolled = window.scrollY - containerTop
+      targetProgress = Math.min(1, Math.max(0, scrolled / scrollableHeight))
     }
 
     function tick() {
-      if (visible) {
-        const gap = targetProgress - currentProgress
-        if (Math.abs(gap) < 0.001) {
-          currentProgress = targetProgress
-        } else {
-          currentProgress += gap * 0.22
-        }
-
-        drawFrame(currentProgress)
-
-        const bar = progressBarRef.current
-        if (bar) bar.style.width = `${currentProgress * 100}%`
+      const gap = targetProgress - currentProgress
+      if (Math.abs(gap) < 0.001) {
+        currentProgress = targetProgress
+      } else {
+        currentProgress += gap * 0.22
       }
+
+      drawFrame(currentProgress)
+
+      const bar = progressBarRef.current
+      if (bar) bar.style.width = `${currentProgress * 100}%`
 
       rafId = requestAnimationFrame(tick)
     }
 
-    // Pause draws (not the loop) when section is off-screen
+    // Fully pause rAF loop when section is off-screen, restart when visible
     const io = new IntersectionObserver(
-      ([entry]) => { visible = entry.isIntersecting },
+      ([entry]) => {
+        const wasVisible = visible
+        visible = entry.isIntersecting
+        if (visible && !wasVisible) {
+          rafId = requestAnimationFrame(tick)
+        } else if (!visible && wasVisible) {
+          cancelAnimationFrame(rafId)
+          rafId = 0
+        }
+      },
       { threshold: 0 }
     )
     if (containerRef.current) io.observe(containerRef.current)
@@ -131,22 +174,24 @@ export default function ScrollVideoSection({
     const ro = new ResizeObserver(() => {
       lastFrameIdx = -1          // force redraw after resize
       sizeCanvas()
+      updateDimensions()
       drawFrame(currentProgress)
     })
     ro.observe(canvas)
 
+    updateDimensions()
     onScroll()
-    rafId = requestAnimationFrame(tick)
     window.addEventListener('scroll', onScroll, { passive: true })
 
     return () => {
-      cancelAnimationFrame(rafId)
+      loadObserver?.disconnect()
+      if (rafId) cancelAnimationFrame(rafId)
       window.removeEventListener('scroll', onScroll)
       ro.disconnect()
       io.disconnect()
       bitmaps.forEach(bmp => bmp?.close())
     }
-  }, [frameDir, frameCount])
+  }, [frameDir, frameCount, isHero])
 
   const Heading = isHero ? 'h1' : 'h2'
 
@@ -163,11 +208,11 @@ export default function ScrollVideoSection({
         {/* ── Canvas ── */}
         <div
           ref={canvasWrapRef}
-          style={{ position: 'absolute', inset: 0, opacity: 0, transition: 'opacity 1s ease', willChange: 'transform' }}
+          style={{ position: 'absolute', inset: 0, opacity: 0, transition: 'opacity 1s ease' }}
         >
           <canvas
             ref={canvasRef}
-            style={{ width: '100%', height: '100%', display: 'block' }}
+            style={{ width: '100%', height: '100%', display: 'block', willChange: 'contents' }}
           />
         </div>
 
@@ -321,3 +366,5 @@ export default function ScrollVideoSection({
     </div>
   )
 }
+
+export default memo(ScrollVideoSection)

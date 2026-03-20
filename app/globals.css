@@ -155,7 +155,7 @@ header {
   font-size: 13px;
   font-weight: 700;
   color: var(--text-light);
-  transition: all 0.3s;
+  transition: background 0.3s, border-color 0.3s, color 0.3s;
   position: relative;
   z-index: 2;
 }
@@ -209,7 +209,7 @@ header {
   border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.25s;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
   position: relative;
 }
 .tier-card:hover { border-color: var(--gold); box-shadow: var(--shadow-lg); transform: translateY(-3px); }
@@ -291,7 +291,7 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: background 0.2s, border-color 0.2s;
   font-size: 11px;
   color: #fff;
 }
@@ -311,7 +311,7 @@ header {
   font-weight: 700;
   color: var(--navy);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -456,7 +456,7 @@ select { cursor: pointer; }
   border-radius: var(--radius);
   padding: 14px 18px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, border-color 0.2s;
   flex: 1;
   min-width: 160px;
 }
@@ -490,7 +490,7 @@ select { cursor: pointer; }
   font-size: 18px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s;
+  transition: background 0.25s, transform 0.25s, box-shadow 0.25s;
   letter-spacing: 0.5px;
   display: flex;
   align-items: center;
@@ -581,7 +581,7 @@ select { cursor: pointer; }
   font-family: 'Lato', sans-serif;
   font-size: 14px;
   font-weight: 700;
-  transition: all 0.25s;
+  transition: background 0.25s, transform 0.25s;
   z-index: 50;
   animation: fabIn 0.3s ease;
 }
@@ -709,7 +709,7 @@ footer a { color: var(--gold-light); text-decoration: none; }
   letter-spacing: 0.5px;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
   white-space: nowrap;
 }
 .lp-nav-cta:hover {
@@ -800,7 +800,7 @@ footer a { color: var(--gold-light); text-decoration: none; }
   font-weight: 700;
   letter-spacing: 0.3px;
   cursor: pointer;
-  transition: all 0.25s;
+  transition: background 0.25s, transform 0.25s, box-shadow 0.25s;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -821,7 +821,7 @@ footer a { color: var(--gold-light); text-decoration: none; }
   font-weight: 700;
   letter-spacing: 0.3px;
   cursor: pointer;
-  transition: all 0.25s;
+  transition: background 0.25s, border-color 0.25s, color 0.25s;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -1122,7 +1122,7 @@ footer a { color: var(--gold-light); text-decoration: none; }
   letter-spacing: 0.5px;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
   text-align: center;
 }
 .lp-tier-cta:hover { background: var(--navy); border-color: var(--navy); color: #fff; }
@@ -1216,7 +1216,7 @@ footer a { color: var(--gold-light); text-decoration: none; }
   border: 1px solid rgba(184,155,110,0.28);
   border-radius: 20px;
   padding: 36px 28px 32px;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 .lp-plan-card:hover {
   background: rgba(255,255,255,0.09);
@@ -1283,7 +1283,7 @@ footer a { color: var(--gold-light); text-decoration: none; }
   color: var(--gold-light);
   letter-spacing: 0.3px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
   text-align: center;
 }
 .lp-plan-cta:hover {
@@ -1339,7 +1339,7 @@ footer a { color: var(--gold-light); text-decoration: none; }
   font-weight: 700;
   letter-spacing: 0.3px;
   cursor: pointer;
-  transition: all 0.25s;
+  transition: background 0.25s, color 0.25s, transform 0.25s, box-shadow 0.25s;
 }
 .lp-btn-primary-dark:hover {
   background: var(--gold);
@@ -1358,7 +1358,7 @@ footer a { color: var(--gold-light); text-decoration: none; }
   font-weight: 700;
   letter-spacing: 0.3px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -1528,7 +1528,20 @@ footer a { color: var(--gold-light); text-decoration: none; }
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: background 0.2s, color 0.2s;
   flex-shrink: 0;
 }
 .bm-close:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ── Reduced motion: respect user OS preference ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

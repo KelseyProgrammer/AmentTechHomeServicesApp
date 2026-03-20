@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import BookingModal from './components/BookingModal'
 import ScrollVideoSection from './components/ScrollVideoSection'
@@ -106,6 +106,7 @@ const TRUST_ITEMS = [
 export default function LandingPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const openModal = useCallback(() => setModalOpen(true), [])
 
   // Solid nav after scrolling past hero
   useEffect(() => {
@@ -141,6 +142,7 @@ export default function LandingPage() {
             alt="Ament"
             width={48}
             height={48}
+            priority
             style={{ borderRadius: 6, background: '#fff', padding: 3, objectFit: 'contain' }}
           />
           <div className="logo-text">
@@ -154,7 +156,7 @@ export default function LandingPage() {
           <a href="#care-plans">Care Plans</a>
           <a href="tel:+14079208035">(407) 920-8035</a>
         </div>
-        <button className="lp-nav-cta" onClick={() => setModalOpen(true)}>
+        <button className="lp-nav-cta" onClick={openModal}>
           Book a Service
         </button>
       </nav>
@@ -165,7 +167,7 @@ export default function LandingPage() {
         frameCount={121}
         title={<>Built Into<br />Every Layer</>}
         body="Behind every wall and above every ceiling, Ament designs smart home systems that disappear into your home — until the moment you need them."
-        onBook={() => setModalOpen(true)}
+        onBook={openModal}
         showScrollCue
         isHero
       />
@@ -176,7 +178,7 @@ export default function LandingPage() {
         frameCount={121}
         title={<>Every Device,<br />One Ecosystem</>}
         body="From your doorbell to your thermostat, Ament connects your home's technology into a single intelligent system — installed right, the first time."
-        onBook={() => setModalOpen(true)}
+        onBook={openModal}
       />
 
       {/* ── TRUST STRIP ── */}
@@ -226,7 +228,7 @@ export default function LandingPage() {
                     <span className="lp-tier-price">${tier.from}</span>
                     <span className="lp-tier-price-note">per service</span>
                   </div>
-                  <button className="lp-tier-cta" onClick={() => setModalOpen(true)}>
+                  <button className="lp-tier-cta" onClick={openModal}>
                     Book {tier.name} →
                   </button>
                 </div>
@@ -296,7 +298,7 @@ export default function LandingPage() {
                 <ul className="lp-plan-perks">
                   {plan.perks.map(p => <li key={p}>{p}</li>)}
                 </ul>
-                <button className="lp-plan-cta" onClick={() => setModalOpen(true)}>
+                <button className="lp-plan-cta" onClick={openModal}>
                   Get Started →
                 </button>
               </div>
@@ -317,7 +319,7 @@ export default function LandingPage() {
             expert, reliable smart home technology.
           </p>
           <div className="lp-cta-actions">
-            <button className="lp-btn-primary-dark" onClick={() => setModalOpen(true)}>
+            <button className="lp-btn-primary-dark" onClick={openModal}>
               Book a Service Today →
             </button>
             <a href="tel:+14079208035" className="lp-btn-ghost-dark">
