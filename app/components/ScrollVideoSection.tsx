@@ -35,60 +35,65 @@ export default function ScrollVideoSection({
     const ctx    = canvas?.getContext('2d')
     if (!canvas || !ctx) return
 
-    // ── Preload all frames ─────────────────────────────────────────────────────
-    const images: HTMLImageElement[] = []
+    // ── Preload frames as ImageBitmaps (GPU-decoded, zero-cost drawImage) ──────
+    const bitmaps: ImageBitmap[] = new Array(frameCount)
     let loadedCount = 0
     let ready = false
 
     for (let i = 1; i <= frameCount; i++) {
-      const img = new Image()
-      const n   = String(i).padStart(3, '0')
-      img.src   = `${frameDir}/frame_${n}.jpg`
-      img.onload = () => {
-        loadedCount++
-        if (loadedCount === frameCount) {
-          ready = true
-          sizeCanvas()
-          drawFrame(0)
-          const wrap = canvasWrapRef.current
-          if (wrap) wrap.style.opacity = '1'
-        }
-      }
-      images.push(img)
+      const n = String(i).padStart(3, '0')
+      fetch(`${frameDir}/frame_${n}.jpg`)
+        .then(r => r.blob())
+        .then(blob => createImageBitmap(blob))
+        .then(bmp => {
+          bitmaps[i - 1] = bmp
+          loadedCount++
+          if (loadedCount === frameCount) {
+            ready = true
+            sizeCanvas()
+            drawFrame(currentProgress)
+            const wrap = canvasWrapRef.current
+            if (wrap) wrap.style.opacity = '1'
+          }
+        })
     }
 
     // ── Canvas sizing ──────────────────────────────────────────────────────────
     function sizeCanvas() {
       if (!canvas) return
-      canvas.width  = canvas.offsetWidth
-      canvas.height = canvas.offsetHeight
+      canvas.width  = canvas.offsetWidth  * window.devicePixelRatio
+      canvas.height = canvas.offsetHeight * window.devicePixelRatio
     }
+
+    let lastFrameIdx = -1
 
     function drawFrame(progress: number) {
       if (!ready || !canvas || !ctx) return
       const idx = Math.round(progress * (frameCount - 1))
-      const img = images[Math.max(0, Math.min(idx, images.length - 1))]
-      if (!img.complete) return
+      if (idx === lastFrameIdx) return          // nothing changed — skip paint
+      lastFrameIdx = idx
+
+      const bmp = bitmaps[Math.max(0, Math.min(idx, bitmaps.length - 1))]
+      if (!bmp) return
 
       // Cover-fit: fill canvas, center crop
       const cw = canvas.width
       const ch = canvas.height
-      const iw = img.naturalWidth
-      const ih = img.naturalHeight
-      const scale  = Math.max(cw / iw, ch / ih)
-      const dw     = iw * scale
-      const dh     = ih * scale
-      const dx     = (cw - dw) / 2
-      const dy     = (ch - dh) / 2
+      const scale = Math.max(cw / bmp.width, ch / bmp.height)
+      const dw    = bmp.width  * scale
+      const dh    = bmp.height * scale
+      const dx    = (cw - dw) / 2
+      const dy    = (ch - dh) / 2
 
       ctx.clearRect(0, 0, cw, ch)
-      ctx.drawImage(img, dx, dy, dw, dh)
+      ctx.drawImage(bmp, dx, dy, dw, dh)
     }
 
     // ── Scroll + rAF loop ──────────────────────────────────────────────────────
     let targetProgress  = 0
     let currentProgress = 0
     let rafId: number
+    let visible = true
 
     function onScroll() {
       const container = containerRef.current
@@ -99,26 +104,36 @@ export default function ScrollVideoSection({
     }
 
     function tick() {
-      const gap = targetProgress - currentProgress
-      if (Math.abs(gap) < 0.001) {
-        currentProgress = targetProgress
-      } else {
-        currentProgress += gap * 0.22
+      if (visible) {
+        const gap = targetProgress - currentProgress
+        if (Math.abs(gap) < 0.001) {
+          currentProgress = targetProgress
+        } else {
+          currentProgress += gap * 0.22
+        }
+
+        drawFrame(currentProgress)
+
+        const bar = progressBarRef.current
+        if (bar) bar.style.width = `${currentProgress * 100}%`
       }
-
-      drawFrame(currentProgress)
-
-      const bar = progressBarRef.current
-      if (bar) bar.style.width = `${currentProgress * 100}%`
 
       rafId = requestAnimationFrame(tick)
     }
 
+    // Pause draws (not the loop) when section is off-screen
+    const io = new IntersectionObserver(
+      ([entry]) => { visible = entry.isIntersecting },
+      { threshold: 0 }
+    )
+    if (containerRef.current) io.observe(containerRef.current)
+
     const ro = new ResizeObserver(() => {
+      lastFrameIdx = -1          // force redraw after resize
       sizeCanvas()
       drawFrame(currentProgress)
     })
-    if (canvas) ro.observe(canvas)
+    ro.observe(canvas)
 
     onScroll()
     rafId = requestAnimationFrame(tick)
@@ -128,6 +143,8 @@ export default function ScrollVideoSection({
       cancelAnimationFrame(rafId)
       window.removeEventListener('scroll', onScroll)
       ro.disconnect()
+      io.disconnect()
+      bitmaps.forEach(bmp => bmp?.close())
     }
   }, [frameDir, frameCount])
 
@@ -146,7 +163,7 @@ export default function ScrollVideoSection({
         {/* ── Canvas ── */}
         <div
           ref={canvasWrapRef}
-          style={{ position: 'absolute', inset: 0, opacity: 0, transition: 'opacity 1s ease' }}
+          style={{ position: 'absolute', inset: 0, opacity: 0, transition: 'opacity 1s ease', willChange: 'transform' }}
         >
           <canvas
             ref={canvasRef}
