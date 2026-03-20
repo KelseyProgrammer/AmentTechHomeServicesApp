@@ -1373,7 +1373,7 @@ footer a { color: var(--gold-light); text-decoration: none; }
 }
 .lp-footer-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 1.4fr 1fr 1fr;
   gap: 52px;
   margin-bottom: 52px;
 }
@@ -1397,7 +1397,8 @@ footer a { color: var(--gold-light); text-decoration: none; }
   font-size: 14px;
   color: rgba(255,255,255,0.42);
   line-height: 1.75;
-  max-width: 280px;
+  max-width: 240px;
+  text-wrap: balance;
 }
 .lp-footer-col-title {
   font-size: 10px;

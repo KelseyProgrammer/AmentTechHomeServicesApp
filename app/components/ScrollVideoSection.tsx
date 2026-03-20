@@ -140,33 +140,28 @@ function ScrollVideoSection({
     }
 
     function tick() {
-      const gap = targetProgress - currentProgress
-      if (Math.abs(gap) < 0.001) {
-        currentProgress = targetProgress
-      } else {
-        currentProgress += gap * 0.22
+      if (visible) {
+        const gap = targetProgress - currentProgress
+        if (Math.abs(gap) < 0.001) {
+          currentProgress = targetProgress
+        } else {
+          currentProgress += gap * 0.22
+        }
+
+        drawFrame(currentProgress)
+
+        const bar = progressBarRef.current
+        if (bar) bar.style.width = `${currentProgress * 100}%`
       }
-
-      drawFrame(currentProgress)
-
-      const bar = progressBarRef.current
-      if (bar) bar.style.width = `${currentProgress * 100}%`
 
       rafId = requestAnimationFrame(tick)
     }
 
-    // Fully pause rAF loop when section is off-screen, restart when visible
+    // IO manages visible flag — canvas ops are skipped when off-screen.
+    // rAF runs continuously (lightweight boolean check) to avoid the
+    // start-delay race condition that caused scroll lag.
     const io = new IntersectionObserver(
-      ([entry]) => {
-        const wasVisible = visible
-        visible = entry.isIntersecting
-        if (visible && !wasVisible) {
-          rafId = requestAnimationFrame(tick)
-        } else if (!visible && wasVisible) {
-          cancelAnimationFrame(rafId)
-          rafId = 0
-        }
-      },
+      ([entry]) => { visible = entry.isIntersecting },
       { threshold: 0 }
     )
     if (containerRef.current) io.observe(containerRef.current)
@@ -181,11 +176,12 @@ function ScrollVideoSection({
 
     updateDimensions()
     onScroll()
+    rafId = requestAnimationFrame(tick)
     window.addEventListener('scroll', onScroll, { passive: true })
 
     return () => {
       loadObserver?.disconnect()
-      if (rafId) cancelAnimationFrame(rafId)
+      cancelAnimationFrame(rafId)
       window.removeEventListener('scroll', onScroll)
       ro.disconnect()
       io.disconnect()
