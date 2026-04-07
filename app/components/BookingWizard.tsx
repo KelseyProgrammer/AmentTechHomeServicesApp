@@ -1,19 +1,10 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import ServiceTierCard, { type Tier, type Cart } from './ServiceTierCard'
+import AIScopingPanel from './AIScopingPanel'
 
 // ─── Data ────────────────────────────────────────────────────────────────────
-
-type Service = { id: string; name: string; price: number }
-type Tier = {
-  tag: string
-  name: string
-  subtitle: string
-  startingAt: number
-  priceNote: string
-  featured?: boolean
-  services: Service[]
-}
 
 const TIERS: Tier[] = [
   {
@@ -65,7 +56,24 @@ const TIERS: Tier[] = [
       { id: 'biz-tech', name: 'Business Tech Setup (custom quote)', price: 1200 },
     ],
   },
+  {
+    tag: 'Tier 4',
+    name: 'Ament AI Workflow',
+    subtitle: 'Intelligent Automation & AI Integration',
+    startingAt: 0,
+    priceNote: 'custom quote',
+    customQuote: true,
+    services: [
+      { id: 'ai-routines', name: 'AI Home Automation Routines', price: 0 },
+      { id: 'ai-dashboard', name: 'Smart Dashboard Setup', price: 0 },
+      { id: 'ai-security', name: 'AI-Assisted Security Monitoring', price: 0 },
+      { id: 'ai-bizflow', name: 'Workflow Automation for Small Business', price: 0 },
+      { id: 'ai-consulting', name: 'AI Device Integration Consulting', price: 0 },
+    ],
+  },
 ]
+
+const AI_IDS = new Set(['ai-routines', 'ai-dashboard', 'ai-security', 'ai-bizflow', 'ai-consulting'])
 
 const CARE_PLANS = [
   {
@@ -91,7 +99,6 @@ const CARE_PLANS = [
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type CartItem = { name: string; price: number }
-type Cart = Record<string, CartItem>
 
 type FormData = {
   firstName: string
@@ -103,6 +110,7 @@ type FormData = {
   preferredDate: string
   notes: string
   hearAbout: string
+  aiProjectBrief?: string
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -114,15 +122,17 @@ export default function BookingWizard({ inModal = false }: { inModal?: boolean }
   const [carePlanSkipped, setCarePlanSkipped] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [aiProjectBrief, setAiProjectBrief] = useState('')
   const [form, setForm] = useState<FormData>({
     firstName: '', lastName: '', email: '', phone: '',
     address: '', propertyType: '', preferredDate: '', notes: '', hearAbout: '',
   })
   const cartRef = useRef<HTMLDivElement>(null)
 
-  const cartItems = Object.values(cart)
+  const cartItems = Object.entries(cart).map(([id, item]) => ({ id, ...item }))
   const cartTotal = cartItems.reduce((s, i) => s + i.price, 0)
   const cartCount = cartItems.length
+  const hasCustomQuote = cartItems.some(i => AI_IDS.has(i.id))
 
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
@@ -159,6 +169,8 @@ export default function BookingWizard({ inModal = false }: { inModal?: boolean }
       services: cartItems.map(i => ({ name: i.name, price: i.price })),
       total: cartTotal,
       carePlan,
+      hasCustomQuote,
+      aiProjectBrief: aiProjectBrief || undefined,
     }
 
     try {
@@ -219,46 +231,21 @@ export default function BookingWizard({ inModal = false }: { inModal?: boolean }
         {step === 1 && (
           <div id="step1">
             <p className="section-title">Select Your Services</p>
-            <p className="section-sub">Choose from our three service tiers — mix and match anything below.</p>
+            <p className="section-sub">Choose from our service tiers — mix and match anything below.</p>
 
-            <div className="tier-grid">
+            <div className={`tier-grid${inModal ? ' tier-grid--in-modal' : ''}`}>
               {TIERS.map(tier => (
-                <div key={tier.tag} className={`tier-card ${tier.featured ? 'featured' : ''}`}>
-                  {tier.featured && <div className="tier-badge-featured">Most Popular</div>}
-                  <div className="tier-header">
-                    <div className="tier-tag">{tier.tag}</div>
-                    <div className="tier-name">{tier.name}</div>
-                    <div className="tier-subtitle">{tier.subtitle}</div>
-                  </div>
-                  <div className="tier-price">
-                    <span className="price-from">From</span>
-                    <span className="price-amount">${tier.startingAt}</span>
-                    <span className="price-note">{tier.priceNote}</span>
-                  </div>
-                  <div className="tier-services">
-                    {tier.services.map(svc => (
-                      <div
-                        key={svc.id}
-                        className={`service-item ${cart[svc.id] ? 'selected' : ''}`}
-                        onClick={() => toggleService(svc.id, svc.name, svc.price)}
-                      >
-                        <div className="service-check">{cart[svc.id] ? '✓' : ''}</div>
-                        <div className="service-name">{svc.name}</div>
-                        <div className="service-price">From ${svc.price.toLocaleString()}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    className="tier-select-btn"
-                    onClick={() => {
-                      tier.services.forEach(svc => {
-                        if (!cart[svc.id]) toggleService(svc.id, svc.name, svc.price)
-                      })
-                    }}
-                  >
-                    Select All {tier.name}
-                  </button>
-                </div>
+                <ServiceTierCard
+                  key={tier.tag}
+                  tier={tier}
+                  cart={cart}
+                  onToggle={toggleService}
+                  onSelectAll={(t) => {
+                    t.services.forEach(svc => {
+                      if (!cart[svc.id]) toggleService(svc.id, svc.name, svc.price)
+                    })
+                  }}
+                />
               ))}
             </div>
 
@@ -266,23 +253,28 @@ export default function BookingWizard({ inModal = false }: { inModal?: boolean }
               <div ref={cartRef} className="cart-panel">
                 <div className="cart-title">🛒 Your Selected Services</div>
                 <div className="cart-items">
-                  {cartItems.map((item, i) => {
-                    const id = Object.keys(cart)[i]
-                    return (
-                      <div key={id} className="cart-item">
-                        <span className="cart-item-name">{item.name}</span>
-                        <span className="cart-item-right">
-                          <span className="cart-item-price">From ${item.price.toLocaleString()}</span>
-                          <button className="cart-remove" onClick={() => removeFromCart(id)}>×</button>
+                  {cartItems.map((item) => (
+                    <div key={item.id} className="cart-item">
+                      <span className="cart-item-name">{item.name}</span>
+                      <span className="cart-item-right">
+                        <span className="cart-item-price">
+                          {AI_IDS.has(item.id) ? 'Custom' : `From $${item.price.toLocaleString()}`}
                         </span>
-                      </div>
-                    )
-                  })}
+                        <button className="cart-remove" onClick={() => removeFromCart(item.id)}>×</button>
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <div className="cart-total">
-                  <span>Estimated Starting Total</span>
-                  <span className="cart-total-amount">${cartTotal.toLocaleString()}</span>
-                </div>
+                {hasCustomQuote ? (
+                  <div className="cart-custom-quote-note">
+                    Includes custom-scoped service — pricing determined after consultation
+                  </div>
+                ) : (
+                  <div className="cart-total">
+                    <span>Estimated Starting Total</span>
+                    <span className="cart-total-amount">${cartTotal.toLocaleString()}</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -306,6 +298,10 @@ export default function BookingWizard({ inModal = false }: { inModal?: boolean }
           <div id="step2">
             <p className="section-title">Your Details</p>
             <p className="section-sub">Tell us a bit about yourself and we&apos;ll reach out to schedule your visit.</p>
+
+            {hasCustomQuote && (
+              <AIScopingPanel onBriefGenerated={setAiProjectBrief} />
+            )}
 
             {!carePlanSkipped && (
               <div className="care-plan-box">
@@ -420,8 +416,10 @@ export default function BookingWizard({ inModal = false }: { inModal?: boolean }
             <div className="confirm-icon">✅</div>
             <div className="confirm-title">Request Received!</div>
             <div className="confirm-sub">
-              Thank you for choosing Ament Home &amp; Tech Services.<br />
-              Sarah will reach out within 24 hours to confirm your appointment.
+              {hasCustomQuote
+                ? <>Sarah will review your project brief and reach out within 24 hours with a custom quote.</>
+                : <>Thank you for choosing Ament Home &amp; Tech Services.<br />Sarah will reach out within 24 hours to confirm your appointment.</>
+              }
             </div>
             <div className="confirm-details">
               <div className="confirm-row">
@@ -452,10 +450,12 @@ export default function BookingWizard({ inModal = false }: { inModal?: boolean }
                   {cartItems.map(i => i.name).join(', ')}
                 </span>
               </div>
-              <div className="confirm-row">
-                <span className="confirm-label">Est. Starting Price</span>
-                <span className="confirm-value">From ${cartTotal.toLocaleString()}</span>
-              </div>
+              {!hasCustomQuote && (
+                <div className="confirm-row">
+                  <span className="confirm-label">Est. Starting Price</span>
+                  <span className="confirm-value">From ${cartTotal.toLocaleString()}</span>
+                </div>
+              )}
               <div className="confirm-row">
                 <span className="confirm-label">Care Plan</span>
                 <span className="confirm-value">{carePlanLabel}</span>

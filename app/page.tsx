@@ -14,6 +14,7 @@ const SERVICES_DATA = [
     subtitle: 'Entertainment & Connectivity',
     from: 65,
     featured: false,
+    customQuote: false,
     services: [
       'TV Mounting & Soundbar Setup',
       'Wi-Fi Router Setup & Optimization',
@@ -29,6 +30,7 @@ const SERVICES_DATA = [
     subtitle: 'Security & Smart Access',
     from: 100,
     featured: true,
+    customQuote: false,
     services: [
       'Video Doorbell Installation',
       'Exterior Camera Systems',
@@ -44,6 +46,7 @@ const SERVICES_DATA = [
     subtitle: 'Full Automation & Pro Systems',
     from: 250,
     featured: false,
+    customQuote: false,
     services: [
       'Whole-Home Automation (HomeKit…)',
       'Pro NVR/DVR Camera Systems',
@@ -51,6 +54,21 @@ const SERVICES_DATA = [
       'Access Control Systems',
       'STR / Airbnb Full Tech Package',
       'Business Tech Setup',
+    ],
+  },
+  {
+    number: 'Tier 4',
+    name: 'Ament AI Workflow',
+    subtitle: 'Intelligent Automation & AI Integration',
+    from: 0,
+    featured: false,
+    customQuote: true,
+    services: [
+      'AI Home Automation Routines',
+      'Smart Dashboard Setup',
+      'AI-Assisted Security Monitoring',
+      'Workflow Automation for Small Business',
+      'AI Device Integration Consulting',
     ],
   },
 ]
@@ -196,6 +214,21 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* ── AI WORKFLOW INTRO ── */}
+      <section className="lp-ai-intro" id="ai-services">
+        <div className="lp-section-inner">
+          <p className="lp-eyebrow">New</p>
+          <h2 className="lp-section-title">Now Offering AI Workflow Services</h2>
+          <p className="lp-ai-intro-sub">We automate the repetitive — so your home and business run themselves.</p>
+          <div className="lp-ai-tiles">
+            <div className="lp-ai-tile"><span className="lp-ai-tile-icon">🤖</span><span>LLM-Powered Automations</span></div>
+            <div className="lp-ai-tile"><span className="lp-ai-tile-icon">🏠</span><span>Smart Home AI Logic</span></div>
+            <div className="lp-ai-tile"><span className="lp-ai-tile-icon">⚙️</span><span>Business Workflow Pipelines</span></div>
+          </div>
+          <a href="#ai-tier" className="lp-ai-anchor" onClick={(e) => { e.preventDefault(); openModal() }}>See AI Services ↓</a>
+        </div>
+      </section>
+
       {/* ── SERVICES ── */}
       <section className="lp-services" id="services">
         <div className="lp-section-inner">
@@ -203,7 +236,7 @@ export default function LandingPage() {
             <div className="lp-eyebrow">What We Do</div>
             <h2 className="lp-section-title">Services Tailored<br />to Your Home</h2>
             <p className="lp-section-sub">
-              Three tiers, one trusted team. Mix and match services across any tier
+              Four tiers, one trusted team. Mix and match services across any tier
               to build your perfect installation.
             </p>
           </div>
@@ -224,12 +257,18 @@ export default function LandingPage() {
                     {tier.services.map(s => <li key={s}>{s}</li>)}
                   </ul>
                   <div className="lp-tier-price-row">
-                    <span className="lp-tier-from">From</span>
-                    <span className="lp-tier-price">${tier.from}</span>
-                    <span className="lp-tier-price-note">per service</span>
+                    {tier.customQuote ? (
+                      <span className="lp-tier-price-note" style={{ fontSize: 14, color: 'var(--gold)' }}>Custom Quote — Scoped to Your Project</span>
+                    ) : (
+                      <>
+                        <span className="lp-tier-from">From</span>
+                        <span className="lp-tier-price">${tier.from}</span>
+                        <span className="lp-tier-price-note">per service</span>
+                      </>
+                    )}
                   </div>
                   <button className="lp-tier-cta" onClick={openModal}>
-                    Book {tier.name} →
+                    {tier.customQuote ? 'Get a Custom Quote →' : `Book ${tier.name} →`}
                   </button>
                 </div>
               </div>

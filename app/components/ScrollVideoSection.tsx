@@ -145,13 +145,13 @@ function ScrollVideoSection({
         if (Math.abs(gap) < 0.001) {
           currentProgress = targetProgress
         } else {
-          currentProgress += gap * 0.22
+          currentProgress += gap * 0.45
         }
 
         drawFrame(currentProgress)
 
         const bar = progressBarRef.current
-        if (bar) bar.style.width = `${currentProgress * 100}%`
+        if (bar) bar.style.transform = `scaleX(${currentProgress})`
       }
 
       rafId = requestAnimationFrame(tick)
@@ -204,11 +204,11 @@ function ScrollVideoSection({
         {/* ── Canvas ── */}
         <div
           ref={canvasWrapRef}
-          style={{ position: 'absolute', inset: 0, opacity: 0, transition: 'opacity 1s ease' }}
+          style={{ position: 'absolute', inset: 0, opacity: 0, transition: 'opacity 1s ease', willChange: 'transform', transform: 'translateZ(0)' }}
         >
           <canvas
             ref={canvasRef}
-            style={{ width: '100%', height: '100%', display: 'block', willChange: 'contents' }}
+            style={{ width: '100%', height: '100%', display: 'block' }}
           />
         </div>
 
@@ -354,8 +354,11 @@ function ScrollVideoSection({
           style={{
             position: 'absolute',
             bottom: 0, left: 0,
-            height: 2, width: '0%',
+            height: 2, width: '100%',
             background: 'linear-gradient(90deg, var(--gold), var(--gold-light))',
+            transform: 'scaleX(0)',
+            transformOrigin: 'left center',
+            willChange: 'transform',
           }}
         />
       </div>
