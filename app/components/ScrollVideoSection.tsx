@@ -36,15 +36,17 @@ function ScrollVideoSection({
     const ctx = canvas?.getContext('2d', { alpha: false })
     if (!canvas || !ctx) return
 
-    // ── Mobile guard ────────────────────────────────────────────────────────────
-    // 242 ImageBitmaps (121 frames × 2 sections) ≈ 2 GB uncompressed — crashes
-    // iOS Safari. Touch/mobile devices get the dark background + text only.
-    const isMobile = window.matchMedia('(hover: none), (max-width: 768px)').matches
-    if (isMobile) return
-
     // Medium smoothing is visually identical for video frames but faster than 'high'
     ctx.imageSmoothingEnabled = true
     ctx.imageSmoothingQuality = 'medium'
+
+    // ── Mobile memory budget ────────────────────────────────────────────────────
+    // 1920×1080 frames decode to ~8 MB each as ImageBitmap (uncompressed RGBA).
+    // 121 frames × 2 sections = ~1.9 GB peak — crashes iOS Safari.
+    // On touch/mobile devices load every 3rd frame (≈40 frames = ~320 MB).
+    // The nearest-frame fallback fills gaps so the animation still looks smooth.
+    const isMobile  = window.matchMedia('(hover: none), (max-width: 768px)').matches
+    const frameStep = isMobile ? 3 : 1
 
     // ── Frame loading ───────────────────────────────────────────────────────────
     const bitmaps: ImageBitmap[] = new Array(frameCount)
@@ -57,7 +59,7 @@ function ScrollVideoSection({
       if (loadStarted) return
       loadStarted = true
 
-      for (let i = 1; i <= frameCount; i++) {
+      for (let i = 1; i <= frameCount; i += frameStep) {
         const n    = String(i).padStart(3, '0')
         // Priority hint: frame 1 loads first so canvas reveals immediately
         const opts = i === 1 ? ({ priority: 'high' } as RequestInit) : {}
