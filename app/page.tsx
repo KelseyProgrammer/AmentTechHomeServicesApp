@@ -161,8 +161,8 @@ export default function LandingPage() {
           <Image
             src="/logo.png"
             alt="Ament"
-            width={48}
-            height={48}
+            width={72}
+            height={72}
             priority
             style={{ borderRadius: 6, background: '#fff', padding: 3, objectFit: 'contain' }}
           />

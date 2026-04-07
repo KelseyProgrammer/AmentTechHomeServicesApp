@@ -47,11 +47,14 @@ header {
 }
 .logo-wrap { display: flex; align-items: center; gap: 16px; }
 .logo-wrap img {
-  height: 60px;
+  height: 72px;
   width: auto;
   border-radius: 6px;
   background: #fff;
   padding: 4px;
+}
+@media (max-width: 480px) {
+  .logo-wrap img { height: 56px; }
 }
 .logo-text { display: flex; flex-direction: column; }
 .logo-text .brand {

@@ -330,17 +330,17 @@ function ScrollVideoSection({
           <div style={{
             position: 'absolute', top: '14%', right: 44,
             display: 'flex', flexDirection: 'column', alignItems: 'center',
-            gap: 10, pointerEvents: 'none',
+            gap: 12, pointerEvents: 'none',
           }}>
             <div style={{
-              width: 1, height: 52,
-              background: 'linear-gradient(to bottom, transparent, rgba(184,155,110,0.9))',
+              width: 2, height: 68,
+              background: 'linear-gradient(to bottom, transparent, rgba(184,155,110,1))',
               animation: 'svsPulse 2s ease-in-out infinite',
             }} />
             <span style={{
-              fontFamily: 'Lato, sans-serif', fontSize: 9,
-              letterSpacing: '3px', textTransform: 'uppercase',
-              color: 'rgba(255,255,255,0.45)', writingMode: 'vertical-rl',
+              fontFamily: 'Lato, sans-serif', fontSize: 13, fontWeight: 700,
+              letterSpacing: '4px', textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.85)', writingMode: 'vertical-rl',
             }}>Scroll</span>
           </div>
         )}
