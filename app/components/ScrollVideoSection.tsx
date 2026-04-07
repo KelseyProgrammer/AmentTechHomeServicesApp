@@ -36,6 +36,12 @@ function ScrollVideoSection({
     const ctx = canvas?.getContext('2d', { alpha: false })
     if (!canvas || !ctx) return
 
+    // ── Mobile guard ────────────────────────────────────────────────────────────
+    // 242 ImageBitmaps (121 frames × 2 sections) ≈ 2 GB uncompressed — crashes
+    // iOS Safari. Touch/mobile devices get the dark background + text only.
+    const isMobile = window.matchMedia('(hover: none), (max-width: 768px)').matches
+    if (isMobile) return
+
     // Medium smoothing is visually identical for video frames but faster than 'high'
     ctx.imageSmoothingEnabled = true
     ctx.imageSmoothingQuality = 'medium'
@@ -227,7 +233,7 @@ function ScrollVideoSection({
         top: 0,
         height: '100vh',
         overflow: 'hidden',
-        background: '#04090f',
+        background: 'radial-gradient(ellipse at 60% 40%, #1a2d47 0%, #04090f 70%)',
       }}>
 
         {/* ── Canvas ── */}

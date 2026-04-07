@@ -1399,7 +1399,6 @@ footer a { color: var(--gold-light); text-decoration: none; }
   font-size: 14px;
   color: rgba(255,255,255,0.42);
   line-height: 1.75;
-  max-width: 240px;
   text-wrap: balance;
 }
 .lp-footer-col-title {
