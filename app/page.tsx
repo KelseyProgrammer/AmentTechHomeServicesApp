@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
-import BookingModal from './components/BookingModal'
 import ScrollVideoSection from './components/ScrollVideoSection'
+
+// Lazy-load the modal + all booking wizard code — keeps it out of the initial JS bundle
+const BookingModal = dynamic(() => import('./components/BookingModal'), { ssr: false })
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
