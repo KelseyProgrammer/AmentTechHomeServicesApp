@@ -29,10 +29,10 @@ export default function BookPage() {
 
       <div className="hero">
         <h1>
-          Expert Smart Home &amp; Tech Services<br />
-          <em>for Greater St. Augustine</em>
+          CCTV Installation &amp; Smart Home Automation<br />
+          <em>in Greater St. Augustine</em>
         </h1>
-        <p>From TV mounting to whole-home automation — we make your technology work for you.</p>
+        <p>From professional security camera systems to AI-powered home automation — get a custom quote scoped to your property.</p>
         <div className="hero-badges">
           <span className="badge">⚡ Same-Week Availability</span>
           <span className="badge">🔒 Licensed &amp; Insured</span>

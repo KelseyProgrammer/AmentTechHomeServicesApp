@@ -25,74 +25,117 @@ function ScrollVideoSection({
   showScrollCue = false,
   isHero = false,
 }: Props) {
-  const containerRef  = useRef<HTMLDivElement>(null)
-  const canvasRef     = useRef<HTMLCanvasElement>(null)
-  const canvasWrapRef = useRef<HTMLDivElement>(null)
+  const containerRef   = useRef<HTMLDivElement>(null)
+  const canvasRef      = useRef<HTMLCanvasElement>(null)
+  const canvasWrapRef  = useRef<HTMLDivElement>(null)
   const progressBarRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
-    // alpha:false — browser skips alpha compositing, meaningful perf gain on canvas
-    const ctx = canvas?.getContext('2d', { alpha: false })
+    const ctx    = canvas?.getContext('2d', { alpha: false })
     if (!canvas || !ctx) return
 
-    // Medium smoothing is visually identical for video frames but faster than 'high'
     ctx.imageSmoothingEnabled = true
-    ctx.imageSmoothingQuality = 'medium'
+    ctx.imageSmoothingQuality = 'low'   // 'low' is visually identical for video frames, faster
 
-    // ── Mobile memory budget ────────────────────────────────────────────────────
-    // 1920×1080 frames decode to ~8 MB each as ImageBitmap (uncompressed RGBA).
-    // 121 frames × 2 sections = ~1.9 GB peak — crashes iOS Safari.
-    // On touch/mobile devices load every 3rd frame (≈40 frames = ~320 MB).
-    // The nearest-frame fallback fills gaps so the animation still looks smooth.
+    let destroyed = false
+
+    // ── prefers-reduced-motion: show last frame, skip scroll entirely ───────────
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReducedMotion) {
+      const n = String(frameCount).padStart(3, '0')
+      fetch(`${frameDir}/frame_${n}.jpg`)
+        .then(r => r.blob())
+        .then(blob => createImageBitmap(blob))
+        .then(bmp => {
+          if (destroyed) { bmp.close(); return }
+          canvas.width  = canvas.offsetWidth  * window.devicePixelRatio
+          canvas.height = canvas.offsetHeight * window.devicePixelRatio
+          const cw = canvas.width, ch = canvas.height
+          const sc = Math.max(cw / bmp.width, ch / bmp.height)
+          ctx.drawImage(bmp, (cw - bmp.width * sc) / 2, (ch - bmp.height * sc) / 2, bmp.width * sc, bmp.height * sc)
+          const wrap = canvasWrapRef.current
+          if (wrap) wrap.style.opacity = '1'
+          bmp.close()
+        })
+        .catch(() => {})
+      return () => { destroyed = true }
+    }
+
+    // ── Frame step: load every Nth frame only ─────────────────────────────────
+    // 121 source frames. At frameStep=4 we load 31 frames — visually identical
+    // with nearest-frame fallback, but 4× less memory & network pressure.
     const isMobile  = window.matchMedia('(hover: none), (max-width: 768px)').matches
-    const frameStep = isMobile ? 3 : 1
+    const frameStep = isMobile ? 5 : 4
 
-    // ── Frame loading ───────────────────────────────────────────────────────────
+    // ── Build load order: keyframes first, then fill-in ───────────────────────
+    // Loading quartile positions first means the animation looks smooth right
+    // away while the rest of the frames trickle in.
+    const framesToLoad: number[] = []
+    const keyPositions = [1, Math.round(frameCount * 0.25), Math.round(frameCount * 0.5), Math.round(frameCount * 0.75), frameCount]
+    const keySet = new Set<number>()
+    for (const pos of keyPositions) {
+      const snapped = Math.max(1, Math.min(frameCount, Math.round((pos - 1) / frameStep) * frameStep + 1))
+      if (!keySet.has(snapped)) { keySet.add(snapped); framesToLoad.push(snapped) }
+    }
+    for (let i = 1; i <= frameCount; i += frameStep) {
+      if (!keySet.has(i)) framesToLoad.push(i)
+    }
+
     const bitmaps: ImageBitmap[] = new Array(frameCount)
-    let loadedCount = 0
     let ready       = false
     let loadStarted = false
-    let destroyed   = false   // prevents callbacks from firing after unmount
 
-    function startFrameLoad() {
-      if (loadStarted) return
-      loadStarted = true
+    // ── Concurrency limiter: max 4 simultaneous fetches ───────────────────────
+    // Without this, 31 fetches fire at once and stall the connection pool.
+    const CONCURRENCY = 4
+    let active = 0
+    let queueIdx = 0
 
-      for (let i = 1; i <= frameCount; i += frameStep) {
-        const n    = String(i).padStart(3, '0')
-        // Priority hint: frame 1 loads first so canvas reveals immediately
-        const opts = i === 1 ? ({ priority: 'high' } as RequestInit) : {}
+    function processQueue() {
+      while (active < CONCURRENCY && queueIdx < framesToLoad.length) {
+        const frameNum = framesToLoad[queueIdx++]
+        active++
+        const n    = String(frameNum).padStart(3, '0')
+        const isFirst = frameNum === 1
+        const opts = isFirst ? ({ priority: 'high' } as RequestInit) : {}
 
         fetch(`${frameDir}/frame_${n}.jpg`, opts)
           .then(r => r.blob())
           .then(blob => createImageBitmap(blob))
           .then(bmp => {
             if (destroyed) { bmp.close(); return }
-            bitmaps[i - 1] = bmp
-            loadedCount++
+            bitmaps[frameNum - 1] = bmp
 
             if (!ready) {
-              // ✦ Show canvas as soon as the very first frame arrives
               ready = true
               sizeCanvas()
               drawFrame(currentProgress)
               const wrap = canvasWrapRef.current
               if (wrap) wrap.style.opacity = '1'
             } else {
-              // Redraw only if this newly decoded frame is the exact target
               const targetIdx = Math.round(currentProgress * (frameCount - 1))
-              if (i - 1 === targetIdx) {
+              if (frameNum - 1 === targetIdx) {
                 lastDrawIdx = -1
                 drawFrame(currentProgress)
               }
             }
           })
-          .catch(() => { /* individual frame failures are silent */ })
+          .catch(() => {})
+          .finally(() => {
+            active--
+            if (!destroyed) processQueue()
+          })
       }
     }
 
-    // Hero: load immediately. Other sections: defer until 150vh away.
+    function startFrameLoad() {
+      if (loadStarted) return
+      loadStarted = true
+      processQueue()
+    }
+
+    // Hero: load immediately. Others: defer until 120vh away.
     let loadObserver: IntersectionObserver | null = null
     if (isHero) {
       startFrameLoad()
@@ -105,20 +148,20 @@ function ScrollVideoSection({
             loadObserver = null
           }
         },
-        { rootMargin: '150% 0px' }
+        { rootMargin: '120% 0px' }
       )
       if (containerRef.current) loadObserver.observe(containerRef.current)
     }
 
-    // ── Canvas sizing ───────────────────────────────────────────────────────────
+    // ── Canvas sizing ─────────────────────────────────────────────────────────
     function sizeCanvas() {
       if (!canvas) return
       canvas.width  = canvas.offsetWidth  * window.devicePixelRatio
       canvas.height = canvas.offsetHeight * window.devicePixelRatio
-      dimCache.cw   = 0  // invalidate draw-dimension cache on resize
+      dimCache.cw   = 0
     }
 
-    // ── Cover-fit cache — recalculate only when canvas or bitmap size changes ──
+    // ── Cover-fit cache — skip recalculation unless dimensions change ─────────
     const dimCache = { cw: 0, ch: 0, bw: 0, bh: 0, dx: 0, dy: 0, dw: 0, dh: 0 }
     let lastDrawIdx = -1
 
@@ -127,7 +170,6 @@ function ScrollVideoSection({
 
       const targetIdx = Math.round(progress * (frameCount - 1))
 
-      // Use target frame if loaded, else find nearest available
       let bmp     = bitmaps[targetIdx]
       let drawIdx = targetIdx
       if (!bmp) {
@@ -140,29 +182,24 @@ function ScrollVideoSection({
           }
         }
       }
-      if (!bmp) return
-      if (drawIdx === lastDrawIdx) return   // nothing changed — skip paint
+      if (!bmp || drawIdx === lastDrawIdx) return
       lastDrawIdx = drawIdx
 
-      const cw = canvas.width
-      const ch = canvas.height
+      const cw = canvas.width, ch = canvas.height
 
-      // Recompute cover-fit only when dimensions change
       if (cw !== dimCache.cw || ch !== dimCache.ch || bmp.width !== dimCache.bw || bmp.height !== dimCache.bh) {
-        const scale   = Math.max(cw / bmp.width, ch / bmp.height)
-        dimCache.cw   = cw;  dimCache.ch = ch
-        dimCache.bw   = bmp.width;  dimCache.bh = bmp.height
-        dimCache.dw   = bmp.width  * scale
-        dimCache.dh   = bmp.height * scale
-        dimCache.dx   = (cw - dimCache.dw) / 2
-        dimCache.dy   = (ch - dimCache.dh) / 2
+        const scale = Math.max(cw / bmp.width, ch / bmp.height)
+        dimCache.cw = cw; dimCache.ch = ch
+        dimCache.bw = bmp.width; dimCache.bh = bmp.height
+        dimCache.dw = bmp.width  * scale; dimCache.dh = bmp.height * scale
+        dimCache.dx = (cw - dimCache.dw) / 2; dimCache.dy = (ch - dimCache.dh) / 2
       }
 
-      ctx.clearRect(0, 0, cw, ch)
+      // alpha:false — no clearRect needed; drawImage overwrites every pixel
       ctx.drawImage(bmp, dimCache.dx, dimCache.dy, dimCache.dw, dimCache.dh)
     }
 
-    // ── Scroll handler ──────────────────────────────────────────────────────────
+    // ── Scroll → RAF pipeline ─────────────────────────────────────────────────
     let currentProgress = 0
     let rafPending      = false
     let visible         = false
@@ -170,11 +207,10 @@ function ScrollVideoSection({
     let scrollableHeight = 0
 
     function updateDimensions() {
-      const container = containerRef.current
-      if (!container) return
-      const rect    = container.getBoundingClientRect()
-      containerTop     = rect.top + window.scrollY
-      scrollableHeight = container.offsetHeight - window.innerHeight
+      const el = containerRef.current
+      if (!el) return
+      containerTop     = el.getBoundingClientRect().top + window.scrollY
+      scrollableHeight = el.offsetHeight - window.innerHeight
     }
 
     function paint() {
@@ -187,28 +223,18 @@ function ScrollVideoSection({
 
     function onScroll() {
       if (!visible || scrollableHeight === 0) return
-      const scrolled  = window.scrollY - containerTop
-      currentProgress = Math.min(1, Math.max(0, scrolled / scrollableHeight))
-      if (!rafPending) {
-        rafPending = true
-        requestAnimationFrame(paint)
-      }
+      currentProgress = Math.min(1, Math.max(0, (window.scrollY - containerTop) / scrollableHeight))
+      if (!rafPending) { rafPending = true; requestAnimationFrame(paint) }
     }
 
     const io = new IntersectionObserver(
-      ([entry]) => {
-        visible = entry.isIntersecting
-        if (visible) onScroll()
-      },
+      ([entry]) => { visible = entry.isIntersecting; if (visible) onScroll() },
       { threshold: 0 }
     )
     if (containerRef.current) io.observe(containerRef.current)
 
     const ro = new ResizeObserver(() => {
-      lastDrawIdx = -1
-      sizeCanvas()
-      updateDimensions()
-      drawFrame(currentProgress)
+      lastDrawIdx = -1; sizeCanvas(); updateDimensions(); drawFrame(currentProgress)
     })
     ro.observe(canvas)
 
@@ -229,94 +255,90 @@ function ScrollVideoSection({
   const Heading = isHero ? 'h1' : 'h2'
 
   return (
-    <div ref={containerRef} style={{ height: '300vh', position: 'relative' }}>
+    // 200vh container = 100vh of scroll-driven animation per section
+    <div ref={containerRef} style={{ height: '200vh', position: 'relative' }}>
       <div style={{
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
+        position: 'sticky', top: 0, height: '100vh',
         overflow: 'hidden',
         background: 'radial-gradient(ellipse at 60% 40%, #1a2d47 0%, #04090f 70%)',
       }}>
 
-        {/* ── Canvas ── */}
+        {/* Canvas */}
         <div
           ref={canvasWrapRef}
-          style={{ position: 'absolute', inset: 0, opacity: 0, transition: 'opacity 1s ease', willChange: 'transform', transform: 'translateZ(0)' }}
+          style={{
+            position: 'absolute', inset: 0, opacity: 0,
+            transition: 'opacity 0.8s ease',
+            willChange: 'opacity', transform: 'translateZ(0)',
+          }}
         >
-          <canvas
-            ref={canvasRef}
-            style={{ width: '100%', height: '100%', display: 'block' }}
-          />
+          <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', willChange: 'transform', transform: 'translateZ(0)' }} />
         </div>
 
-        {/* ── Scrim: base tint ── */}
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'rgba(4,9,15,0.18)' }} />
+        {/* Scrim: base tint */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'rgba(4,9,15,0.22)' }} />
 
-        {/* ── Scrim: bottom gradient ── */}
+        {/* Scrim: strong bottom gradient for text legibility */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'linear-gradient(to top, rgba(4,9,15,0.88) 0%, rgba(4,9,15,0.55) 18%, rgba(4,9,15,0.10) 38%, transparent 52%)',
+          background: 'linear-gradient(to top, rgba(4,9,15,0.94) 0%, rgba(4,9,15,0.7) 20%, rgba(4,9,15,0.18) 42%, transparent 56%)',
         }} />
 
-        {/* ── Scrim: top edge ── */}
+        {/* Scrim: top edge */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'linear-gradient(to bottom, rgba(4,9,15,0.40) 0%, transparent 14%)',
+          background: 'linear-gradient(to bottom, rgba(4,9,15,0.50) 0%, transparent 16%)',
         }} />
 
-        {/* ── Text — anchored bottom-center ── */}
+        {/* Text — anchored bottom-center */}
         <div style={{
-          position: 'absolute',
-          bottom: '10%',
-          left: '50%',
+          position: 'absolute', bottom: '9%', left: '50%',
           transform: 'translateX(-50%)',
-          textAlign: 'center',
-          width: 'min(700px, 86vw)',
+          textAlign: 'center', width: 'min(700px, 86vw)',
           pointerEvents: 'none',
         }}>
           <div style={{
-            width: 32, height: 2,
-            background: 'var(--gold)',
-            margin: '0 auto 22px',
-            borderRadius: 1,
-            boxShadow: '0 0 10px rgba(184,155,110,0.5)',
+            width: 32, height: 2, background: 'var(--gold)',
+            margin: '0 auto 20px', borderRadius: 1,
+            boxShadow: '0 0 12px rgba(184,155,110,0.6)',
           }} />
           <div style={{
-            fontFamily: 'Lato, sans-serif', fontSize: 11, fontWeight: 700,
+            fontFamily: 'var(--font-lato), sans-serif', fontSize: 11, fontWeight: 700,
             letterSpacing: '5px', textTransform: 'uppercase',
-            color: 'var(--gold)', marginBottom: 20,
-            textShadow: '0 1px 8px rgba(0,0,0,1)',
+            color: 'var(--gold)', marginBottom: 18,
+            textShadow: '0 1px 10px rgba(0,0,0,1)',
           }}>
             {eyebrow}
           </div>
           <Heading style={{
-            fontFamily: 'Playfair Display, serif',
-            fontSize: 'clamp(42px, 6.5vw, 84px)',
-            fontWeight: 700, color: '#fff', lineHeight: 1.04,
-            margin: '0 0 24px', letterSpacing: '-0.5px',
-            textShadow: '0 2px 2px rgba(0,0,0,0.5), 0 4px 20px rgba(0,0,0,0.9), 0 12px 48px rgba(0,0,0,0.7)',
+            fontFamily: 'var(--font-playfair), serif',
+            fontSize: 'clamp(40px, 6.5vw, 84px)',
+            fontWeight: 700, color: '#fff', lineHeight: 1.05,
+            margin: '0 0 22px', letterSpacing: '-0.5px',
+            textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 6px 24px rgba(0,0,0,1), 0 16px 56px rgba(0,0,0,0.9)',
           }}>
             {title}
           </Heading>
           <p style={{
-            fontFamily: 'Lato, sans-serif', fontSize: 17,
-            color: 'rgba(255,255,255,0.92)', lineHeight: 1.8, fontWeight: 300,
-            margin: '0 auto', maxWidth: 540,
-            textShadow: '0 1px 6px rgba(0,0,0,1), 0 4px 20px rgba(0,0,0,0.95)',
+            fontFamily: 'var(--font-lato), sans-serif', fontSize: 17,
+            color: 'rgba(255,255,255,0.95)', lineHeight: 1.8, fontWeight: 300,
+            margin: '0 auto', maxWidth: 520,
+            textShadow: '0 1px 8px rgba(0,0,0,1), 0 4px 24px rgba(0,0,0,1)',
           }}>
             {body}
           </p>
           {onBook && (
-            <div style={{ marginTop: 36, pointerEvents: 'auto' }}>
+            <div style={{ marginTop: 34, pointerEvents: 'auto' }}>
               <button
                 onClick={onBook}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 10,
                   padding: '15px 42px', background: 'var(--gold)', color: '#fff',
-                  fontFamily: 'Lato, sans-serif', fontSize: 12, fontWeight: 700,
+                  fontFamily: 'var(--font-lato), sans-serif', fontSize: 12, fontWeight: 700,
                   letterSpacing: '2.5px', textTransform: 'uppercase',
                   border: 'none', borderRadius: 3, cursor: 'pointer',
-                  boxShadow: '0 4px 32px rgba(0,0,0,0.6)',
+                  boxShadow: '0 4px 32px rgba(0,0,0,0.7)',
+                  transition: 'background 0.2s, transform 0.2s',
                 }}
               >
                 {ctaLabel} →
@@ -325,7 +347,7 @@ function ScrollVideoSection({
           )}
         </div>
 
-        {/* ── Scroll cue (hero only) ── */}
+        {/* Scroll cue (hero only) */}
         {showScrollCue && (
           <div style={{
             position: 'absolute', top: '14%', right: 44,
@@ -338,22 +360,22 @@ function ScrollVideoSection({
               animation: 'svsPulse 2s ease-in-out infinite',
             }} />
             <span style={{
-              fontFamily: 'Lato, sans-serif', fontSize: 13, fontWeight: 700,
+              fontFamily: 'var(--font-lato), sans-serif', fontSize: 13, fontWeight: 700,
               letterSpacing: '4px', textTransform: 'uppercase',
-              color: 'rgba(255,255,255,0.85)', writingMode: 'vertical-rl',
+              color: 'rgba(255,255,255,0.9)', writingMode: 'vertical-rl',
+              textShadow: '0 1px 6px rgba(0,0,0,0.8)',
             }}>Scroll</span>
           </div>
         )}
 
-        {/* ── Progress bar ── */}
+        {/* Progress bar */}
         <div
           ref={progressBarRef}
           style={{
             position: 'absolute', bottom: 0, left: 0,
             height: 2, width: '100%',
             background: 'linear-gradient(90deg, var(--gold), var(--gold-light))',
-            transform: 'scaleX(0)',
-            transformOrigin: 'left center',
+            transform: 'scaleX(0)', transformOrigin: 'left center',
             willChange: 'transform',
           }}
         />
