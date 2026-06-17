@@ -1,70 +1,40 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import ScrollVideoSection from './components/ScrollVideoSection'
 
-// Lazy-load the modal + all booking wizard code — keeps it out of the initial JS bundle
 const BookingModal = dynamic(() => import('./components/BookingModal'), { ssr: false })
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
 const SERVICES_DATA = [
   {
-    number: 'Tier 1',
-    name: 'Ament Connect',
-    subtitle: 'Entertainment & Connectivity',
-    from: 65,
-    featured: false,
-    customQuote: false,
-    services: [
-      'TV Mounting & Soundbar Setup',
-      'Wi-Fi Router Setup & Optimization',
-      'Streaming Device Configuration',
-      'Cable Concealment (in-wall/raceway)',
-      'Device Setup & Network Connect',
-      'Tech Orientation Sessions',
-    ],
-  },
-  {
-    number: 'Tier 2',
-    name: 'Ament Secure',
-    subtitle: 'Security & Smart Access',
-    from: 100,
+    id: 'security',
+    category: 'Security & Surveillance',
+    eyebrow: 'Flagship Service',
+    badge: 'Most Requested',
     featured: true,
+    startingAt: 'Systems from $775',
     customQuote: false,
     services: [
+      'CCTV Camera System Installation',
       'Video Doorbell Installation',
-      'Exterior Camera Systems',
-      'Full 4-Camera Packages',
+      'Exterior Camera Packages (4-cam, 8-cam, custom)',
+      'Pro NVR/DVR Systems',
       'Smart Lock Installation & Setup',
-      'Whole-Home Mesh Wi-Fi',
+      'Alarm System Setup (SimpliSafe & more)',
       'Network Security Audit & Hardening',
     ],
   },
   {
-    number: 'Tier 3',
-    name: 'Ament Command',
-    subtitle: 'Full Automation & Pro Systems',
-    from: 250,
+    id: 'ai',
+    category: 'Smart Automation & AI',
+    eyebrow: 'Now Offering',
+    badge: null,
     featured: false,
-    customQuote: false,
-    services: [
-      'Whole-Home Automation (HomeKit…)',
-      'Pro NVR/DVR Camera Systems',
-      'Smart Home Consultation',
-      'Access Control Systems',
-      'STR / Airbnb Full Tech Package',
-      'Business Tech Setup',
-    ],
-  },
-  {
-    number: 'Tier 4',
-    name: 'Ament AI Workflow',
-    subtitle: 'Intelligent Automation & AI Integration',
-    from: 0,
-    featured: false,
+    startingAt: null,
     customQuote: true,
     services: [
       'AI Home Automation Routines',
@@ -72,6 +42,40 @@ const SERVICES_DATA = [
       'AI-Assisted Security Monitoring',
       'Workflow Automation for Small Business',
       'AI Device Integration Consulting',
+      'Whole-Home Automation (HomeKit, Google, Alexa)',
+    ],
+  },
+  {
+    id: 'connectivity',
+    category: 'Connectivity & Setup',
+    eyebrow: 'Entertainment & Network',
+    badge: null,
+    featured: false,
+    startingAt: 'From $65',
+    customQuote: false,
+    services: [
+      'TV Mounting & Soundbar Setup',
+      'Wi-Fi Router Setup & Optimization',
+      'Whole-Home Mesh Wi-Fi Systems',
+      'Streaming Device Configuration',
+      'Cable Concealment (in-wall/raceway)',
+      'Device Setup & Tech Orientation',
+    ],
+  },
+  {
+    id: 'smartHome',
+    category: 'Smart Home & Pro Systems',
+    eyebrow: 'Full Installations',
+    badge: null,
+    featured: false,
+    startingAt: 'From $250',
+    customQuote: false,
+    services: [
+      'Whole-Home Automation (HomeKit/Google/Alexa)',
+      'Smart Home Consultation',
+      'Access Control Systems',
+      'STR / Airbnb Full Tech Package',
+      'Business Tech Setup',
     ],
   },
 ]
@@ -126,17 +130,15 @@ const TRUST_ITEMS = [
 
 export default function LandingPage() {
   const [modalOpen, setModalOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const navRef = useRef<HTMLElement>(null)
   const openModal = useCallback(() => setModalOpen(true), [])
 
-  // Solid nav after scrolling past hero
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60)
+    const onScroll = () => navRef.current?.classList.toggle('lp-nav--scrolled', window.scrollY > 60)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Scroll-triggered reveal animation
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
@@ -156,7 +158,7 @@ export default function LandingPage() {
   return (
     <>
       {/* ── FLOATING NAV ── */}
-      <nav className={`lp-nav ${scrolled ? 'lp-nav--scrolled' : ''}`}>
+      <nav ref={navRef} className="lp-nav">
         <div className="logo-wrap">
           <Image
             src="/logo.png"
@@ -178,7 +180,7 @@ export default function LandingPage() {
           <a href="tel:+14079208035">(407) 920-8035</a>
         </div>
         <button className="lp-nav-cta" onClick={openModal}>
-          Book a Service
+          Get a Quote
         </button>
       </nav>
 
@@ -186,8 +188,8 @@ export default function LandingPage() {
       <ScrollVideoSection
         frameDir="/frames/house"
         frameCount={121}
-        title={<>Built Into<br />Every Layer</>}
-        body="Behind every wall and above every ceiling, Ament designs smart home systems that disappear into your home — until the moment you need them."
+        title={<>CCTV & Smart Home<br />Specialists</>}
+        body="From professional security camera systems to AI-powered home automation — Ament delivers expert technology upgrades to homes and businesses across St. Augustine."
         onBook={openModal}
         showScrollCue
         isHero
@@ -217,61 +219,33 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ── AI WORKFLOW INTRO ── */}
-      <section className="lp-ai-intro" id="ai-services">
-        <div className="lp-section-inner">
-          <p className="lp-eyebrow">New</p>
-          <h2 className="lp-section-title">Now Offering AI Workflow Services</h2>
-          <p className="lp-ai-intro-sub">We automate the repetitive — so your home and business run themselves.</p>
-          <div className="lp-ai-tiles">
-            <div className="lp-ai-tile"><span className="lp-ai-tile-icon">🤖</span><span>LLM-Powered Automations</span></div>
-            <div className="lp-ai-tile"><span className="lp-ai-tile-icon">🏠</span><span>Smart Home AI Logic</span></div>
-            <div className="lp-ai-tile"><span className="lp-ai-tile-icon">⚙️</span><span>Business Workflow Pipelines</span></div>
-          </div>
-          <a href="#ai-tier" className="lp-ai-anchor" onClick={(e) => { e.preventDefault(); openModal() }}>See AI Services ↓</a>
-        </div>
-      </section>
-
       {/* ── SERVICES ── */}
       <section className="lp-services" id="services">
         <div className="lp-section-inner">
           <div className="reveal">
             <div className="lp-eyebrow">What We Do</div>
-            <h2 className="lp-section-title">Services Tailored<br />to Your Home</h2>
+            <h2 className="lp-section-title">Security, Automation<br />&amp; Everything In Between</h2>
             <p className="lp-section-sub">
-              Four tiers, one trusted team. Mix and match services across any tier
-              to build your perfect installation.
+              CCTV installation and AI automation are our flagship services — backed by a full catalog of smart home and connectivity work. Get a custom quote scoped to your property.
             </p>
           </div>
-          <div className="lp-tier-bento">
-            {SERVICES_DATA.map((tier, i) => (
+          <div className="lp-tier-bento lp-tier-bento--2col">
+            {SERVICES_DATA.map((svc, i) => (
               <div
-                key={tier.name}
-                className={`lp-tier-card${tier.featured ? ' lp-tier-card--featured' : ''} reveal reveal-delay-${i + 1}`}
+                key={svc.id}
+                className={`lp-tier-card${svc.featured ? ' lp-tier-card--featured' : ''} reveal reveal-delay-${i + 1}`}
               >
                 <div className="lp-tier-card-header">
-                  {tier.featured && <div className="lp-tier-featured-badge">Most Popular</div>}
-                  <div className="lp-tier-number">{tier.number}</div>
-                  <div className="lp-tier-name">{tier.name}</div>
-                  <div className="lp-tier-subtitle">{tier.subtitle}</div>
+                  {svc.badge && <div className="lp-tier-featured-badge">{svc.badge}</div>}
+                  <div className="lp-tier-number">{svc.eyebrow}</div>
+                  <div className="lp-tier-name">{svc.category}</div>
                 </div>
                 <div className="lp-tier-card-body">
                   <ul className="lp-tier-list">
-                    {tier.services.map(s => <li key={s}>{s}</li>)}
+                    {svc.services.map(s => <li key={s}>{s}</li>)}
                   </ul>
-                  <div className="lp-tier-price-row">
-                    {tier.customQuote ? (
-                      <span className="lp-tier-price-note" style={{ fontSize: 14, color: 'var(--gold)' }}>Custom Quote — Scoped to Your Project</span>
-                    ) : (
-                      <>
-                        <span className="lp-tier-from">From</span>
-                        <span className="lp-tier-price">${tier.from}</span>
-                        <span className="lp-tier-price-note">per service</span>
-                      </>
-                    )}
-                  </div>
                   <button className="lp-tier-cta" onClick={openModal}>
-                    {tier.customQuote ? 'Get a Custom Quote →' : `Book ${tier.name} →`}
+                    Get a Free Quote →
                   </button>
                 </div>
               </div>
@@ -285,27 +259,22 @@ export default function LandingPage() {
         <div className="lp-section-inner">
           <div className="reveal lp-hiw-header">
             <div className="lp-eyebrow">Simple Process</div>
-            <h2 className="lp-section-title">From Inquiry<br />to Installation</h2>
+            <h2 className="lp-section-title">From Request<br />to Installation</h2>
             <p className="lp-section-sub lp-section-sub--center">
-              We keep things simple. Three easy steps and your home is upgraded.
+              Two steps — that&apos;s it.
             </p>
           </div>
-          <div className="lp-hiw-steps">
+          <div className="lp-hiw-steps lp-hiw-steps--two">
             {[
               {
                 n: '1',
-                title: 'Select Your Services',
-                desc: 'Browse our service tiers and build your custom installation list. Mix and match anything across all three tiers.',
+                title: 'Describe Your Project',
+                desc: 'Answer a short questionnaire about your property and what you need. Our smart form scopes the job so we arrive prepared — no surprises.',
               },
               {
                 n: '2',
-                title: 'We Reach Out & Schedule',
-                desc: 'Sarah will contact you within 24 hours to confirm your appointment window and answer any questions.',
-              },
-              {
-                n: '3',
                 title: 'We Install. You Relax.',
-                desc: 'Our expert technician arrives on time, completes the job cleanly, and walks you through everything when finished.',
+                desc: 'Sarah will call within 24 hours to confirm your appointment. Our tech arrives on time, installs everything correctly, and walks you through it.',
               },
             ].map((step, i) => (
               <div key={step.n} className={`lp-hiw-step reveal reveal-delay-${i + 1}`}>
@@ -357,12 +326,12 @@ export default function LandingPage() {
             <em>Your Home?</em>
           </h2>
           <p className="lp-cta-sub">
-            Join hundreds of St. Augustine homeowners who trust Ament for
-            expert, reliable smart home technology.
+            Join St. Augustine homeowners and businesses who trust Ament for
+            expert CCTV installation, smart home automation, and tech support.
           </p>
           <div className="lp-cta-actions">
             <button className="lp-btn-primary-dark" onClick={openModal}>
-              Book a Service Today →
+              Get a Free Quote →
             </button>
             <a href="tel:+14079208035" className="lp-btn-ghost-dark">
               Call (407) 920-8035
@@ -379,16 +348,16 @@ export default function LandingPage() {
               <div className="lp-footer-brand-name">AMENT</div>
               <div className="lp-footer-brand-tag">Home &amp; Tech Services</div>
               <p className="lp-footer-tagline">
-                Expert smart home technology installation and ongoing support
+                Expert CCTV installation, AI home automation, and smart home technology
                 serving Greater St. Augustine, Florida.
               </p>
             </div>
             <div>
               <div className="lp-footer-col-title">Services</div>
               <ul className="lp-footer-links">
-                <li><a href="#services">Ament Connect</a></li>
-                <li><a href="#services">Ament Secure</a></li>
-                <li><a href="#services">Ament Command</a></li>
+                <li><a href="#services">Security & Surveillance</a></li>
+                <li><a href="#services">Smart Automation & AI</a></li>
+                <li><a href="#services">Connectivity & Setup</a></li>
                 <li><a href="#care-plans">Care Plans</a></li>
               </ul>
             </div>
