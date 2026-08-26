@@ -100,12 +100,19 @@ CAT6 keystone jacks $3 ea, gel-filled wire connectors for access control $10/100
 compression BNC $2 ea (legacy coax only). Bulk Cat6 cable dealer cost still TBD
 (typical trade ~$0.10–0.15/ft) — assume ~$15–25 total materials per cable run.
 
-PRICING POLICY (suggested defaults — Sarah/Chris may override):
+PRICING POLICY (locked August 2026):
 - Ament-supplied hardware: mark up 45% over dealer cost, then add labor.
-- Labor: $125–150 per camera/cable drop (single-story attic run); $150–200 for
-  difficult runs (two-story, soffit, masonry, plaster); NVR configuration &
-  commissioning $150–300 per system. Labor must cover the LES-licensed
-  technician's hourly wage plus QA fee — never price any job below $150 total.
+- Internal labor cost basis (never disclose): LES-licensed technician at $32/hr
+  wage (~$43/hr fully loaded with payroll tax + workers' comp), plus a flat
+  $100 QA/sign-off fee on any job the license holder inspects but does not
+  personally install.
+- Labor pricing: $125–150 per camera/cable drop (single-story attic run);
+  $150–200 for difficult runs (two-story, soffit, masonry, plaster); NVR
+  configuration & commissioning $150–300 per system. Never price any job below
+  $150 total.
+- Margin sanity check on every estimate: recommended range minus hardware cost
+  must comfortably cover estimated labor hours at the loaded rate plus the QA
+  fee; if it cannot, raise the range rather than squeeze the margin.
 - Customer-supplied hardware: labor-only pricing at the same labor rates, no
   hardware warranty; do not discount below the labor-only guardrails.
 - PTZ, LPR, fisheye, solar/cellular, or access control gear: flag as "custom
