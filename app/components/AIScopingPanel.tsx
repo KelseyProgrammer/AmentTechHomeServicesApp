@@ -42,8 +42,8 @@ export default function AIScopingPanel({ onBriefGenerated }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ description, size, platform, priorities }),
       })
-      if (!res.ok) throw new Error('Failed to generate brief.')
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Failed to generate brief.')
       setBrief(data.brief)
       onBriefGenerated(data.brief)
     } catch (err) {
