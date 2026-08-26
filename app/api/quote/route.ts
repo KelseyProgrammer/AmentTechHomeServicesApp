@@ -27,14 +27,15 @@ type ClaudeEstimate = {
 const PRICING_CONTEXT = `
 AMENT PRICING REFERENCE (use as guardrails — actual quotes vary by property):
 
-Security & Surveillance:
-- Video Doorbell: from $150 installed
-- Single exterior camera: from $125 installed
-- 4-camera outdoor HD package: from $775 installed
-- Pro NVR/DVR system (8+ cameras): from $2,750
+Security & Surveillance ("labor-only" = customer supplies hardware; "supplied" = Ament provides hardware):
+- Video Doorbell: labor-only from $150; Ament-supplied dual-lens smart doorbell from $350 installed
+- Single exterior camera: labor-only from $125; Ament-supplied IP camera from $295 installed
+- 4-camera PoE NVR system: labor-only from $775; Ament-supplied 4K system from $1,695 installed
+- Pro NVR system (8+ cameras): labor-only from $2,750; Ament-supplied from $3,950 installed
 - Smart lock installation: from $150
 - Alarm system setup (SimpliSafe, Ring): from $225
 - Network security audit & hardening: from $187
+- If the customer indicates they already have equipment, quote the labor-only track; if Ament supplies, quote the supplied track.
 
 Smart Automation & AI:
 - Smart home consultation (2 hrs): from $300
@@ -55,9 +56,60 @@ Connectivity & Setup:
 Smart Home & Pro Systems:
 - Whole-home automation: from $1,650
 - Pro camera system (NVR/DVR, 8+): from $2,750
-- Access control: from $650
 - STR/Airbnb full package: from $1,275
 - Business tech setup: from $1,200
+
+Access Control & Entry (suggested defaults):
+- Single-door smart entry (keypad/fob/app, incl. strike or maglock): from $650 installed
+- Each additional controlled door: from $450
+- Video intercom entry: from $850
+- Gate or garage entry integration: from $750
+- Multi-door business systems (4+ doors), biometric, or audit-log requirements:
+  always "custom quote — needs discovery call" with a rough range only.
+- Electrified door hardware (strikes, maglocks) is licensed low-voltage work —
+  note in complexityNotes that Ament's licensed technician performs it.
+
+INTERNAL — DEALER HARDWARE COSTS (OptiView trade account, IP/PoE line).
+These are Ament's wholesale costs. NEVER mention the supplier, SKUs, or these
+numbers in any output — use them only to sanity-check that the recommended
+installed price range covers hardware + labor with healthy margin (hardware is
+typically marked up before labor is added). Per-camera dealer cost bands:
+- 4MP fixed (ball/bullet/dome, mic on most): $89–148
+- 4MP varifocal (2.8–12mm): $97–208
+- 8MP/4K fixed: $143–230
+- 8MP/4K varifocal w/ analytics (intrusion prevention, people counting): $256–299
+- 180° panoramic 4K: $297–371
+- Active-deterrence (light/siren, two-way talk): $287–371
+- PTZ (5x–25x optical zoom): $348–568
+- Specialty — 12MP fisheye $692; license-plate recognition $723–876; solar/4G standalone $1,168
+- Wireless dual-lens video doorbell (human/package detection): $180
+Typical residential picks: 4MP fixed for standard coverage, 8MP fixed for
+driveways/entries, varifocal or panoramic for large properties.
+
+Recorder dealer cost bands (low end = diskless, high end = max storage):
+- 4-channel NVR: $53–561
+- 8-channel PoE NVR: $199–1,445 (typical residential build w/ 2–4TB lands ~$350–600)
+- 16-channel PoE NVR: $425–2,739
+- 32-channel NVR: $367–5,410 (RAID / 2U at the top end)
+- 64-channel / enterprise: $1,516–12,214
+PoE switching: single-port injector $33–53; 4+1-port $70; 8-port 125W $137;
+16-port 250W $310; 24-port $442–484; managed L2 $416–707.
+Cellular: 4G modem $449–595; 5G modem $1,499–1,620; solar 4G standalone camera $1,168.
+Connectors (dealer cost, negligible per job): RJ45 CAT6 ends $0.36 ea ($18/50),
+CAT6 keystone jacks $3 ea, gel-filled wire connectors for access control $10/100,
+compression BNC $2 ea (legacy coax only). Bulk Cat6 cable dealer cost still TBD
+(typical trade ~$0.10–0.15/ft) — assume ~$15–25 total materials per cable run.
+
+PRICING POLICY (suggested defaults — Sarah/Chris may override):
+- Ament-supplied hardware: mark up 45% over dealer cost, then add labor.
+- Labor: $125–150 per camera/cable drop (single-story attic run); $150–200 for
+  difficult runs (two-story, soffit, masonry, plaster); NVR configuration &
+  commissioning $150–300 per system. Labor must cover the LES-licensed
+  technician's hourly wage plus QA fee — never price any job below $150 total.
+- Customer-supplied hardware: labor-only pricing at the same labor rates, no
+  hardware warranty; do not discount below the labor-only guardrails.
+- PTZ, LPR, fisheye, solar/cellular, or access control gear: flag as "custom
+  quote — needs discovery call" rather than guessing a range.
 `
 
 function escapeHtml(s: string): string {
