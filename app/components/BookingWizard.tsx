@@ -39,8 +39,15 @@ const CATEGORIES: Category[] = [
   {
     id: 'smartHome',
     name: 'Smart Home & Pro Systems',
-    desc: 'Full home automation, NVR/DVR systems, access control, STR/Airbnb packages',
+    desc: 'Full home automation, NVR/DVR systems, STR/Airbnb packages',
     icon: '🏠',
+    startingAt: '',
+  },
+  {
+    id: 'accessControl',
+    name: 'Access Control & Entry',
+    desc: 'Keypads, fob & card readers, app-based entry, door strikes, maglocks, gate access',
+    icon: '🔐',
     startingAt: '',
   },
 ]
@@ -80,6 +87,12 @@ const QUESTIONNAIRES: Record<string, Question[]> = {
       label: 'Existing NVR/DVR or recorder?',
       type: 'select',
       options: ['No — starting fresh', 'Yes — keep existing', 'Yes — want to replace it'],
+    },
+    {
+      id: 'equipmentSource',
+      label: 'Equipment preference',
+      type: 'select',
+      options: ['Ament supplies everything (recommended)', 'I already have my equipment', 'Mix of both / not sure yet'],
     },
     {
       id: 'storagePreference',
@@ -208,6 +221,12 @@ const QUESTIONNAIRES: Record<string, Question[]> = {
       options: ['None yet', 'Google Home', 'Amazon Alexa', 'Apple HomeKit', 'Home Assistant', 'Multiple / mixed'],
     },
     {
+      id: 'equipmentSource',
+      label: 'Equipment preference',
+      type: 'select',
+      options: ['Ament supplies everything (recommended)', 'I already have my equipment', 'Mix of both / not sure yet'],
+    },
+    {
       id: 'timeline',
       label: 'Timeline',
       type: 'select',
@@ -228,6 +247,56 @@ const QUESTIONNAIRES: Record<string, Question[]> = {
     {
       id: 'notes',
       label: 'Anything else?',
+      type: 'textarea',
+      optional: true,
+    },
+  ],
+  accessControl: [
+    {
+      id: 'propertyType',
+      label: 'Property type',
+      type: 'select',
+      options: ['Primary Residence', 'Short-Term Rental / Airbnb', 'Small Business / Office', 'Multi-Unit / Commercial', 'Church / Nonprofit', 'Other'],
+    },
+    {
+      id: 'doorCount',
+      label: 'Doors or entry points to control',
+      type: 'select',
+      options: ['1 door', '2–3 doors', '4–8 doors', '9+ doors', 'Gate or garage entry'],
+    },
+    {
+      id: 'entryMethods',
+      label: 'Preferred entry methods (select all that apply)',
+      type: 'multiselect',
+      options: ['Keypad / PIN code', 'Key fob or card', 'Smartphone app', 'Video intercom', 'Fingerprint / biometric', 'Not sure yet'],
+    },
+    {
+      id: 'doorTypes',
+      label: 'Door types (select all that apply)',
+      type: 'multiselect',
+      options: ['Standard wood / metal doors', 'Glass storefront doors', 'Exterior gates', 'Garage / overhead doors', 'Not sure yet'],
+    },
+    {
+      id: 'existingSystem',
+      label: 'Existing access control system?',
+      type: 'select',
+      options: ['No — starting fresh', 'Yes — want to expand it', 'Yes — want to replace it'],
+    },
+    {
+      id: 'remoteManagement',
+      label: 'Remote management needs',
+      type: 'select',
+      options: ['Manage from my phone (grant/revoke access remotely)', 'On-site management is fine', 'Need audit logs / entry history', 'Not sure yet'],
+    },
+    {
+      id: 'timeline',
+      label: 'Timeline',
+      type: 'select',
+      options: ['ASAP', 'Within the next month', 'Just exploring options'],
+    },
+    {
+      id: 'notes',
+      label: 'Anything else we should know?',
       type: 'textarea',
       optional: true,
     },

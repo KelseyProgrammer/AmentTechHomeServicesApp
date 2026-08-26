@@ -1758,6 +1758,10 @@ footer a { color: var(--gold-light); text-decoration: none; }
 .bw-cat-grid--modal {
   grid-template-columns: repeat(2, 1fr);
 }
+/* With an odd number of categories, let the last card fill its row */
+.bw-cat-card:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
 @media (max-width: 520px) {
   .bw-cat-grid,
   .bw-cat-grid--modal { grid-template-columns: 1fr; }
