@@ -722,8 +722,30 @@ footer a { color: var(--gold-light); text-decoration: none; }
   transform: translateY(-1px);
   box-shadow: 0 4px 20px rgba(184,155,110,0.4);
 }
+.lp-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.lp-nav-hiring {
+  color: var(--gold-light);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.lp-nav-hiring:hover { color: #fff; }
 @media (max-width: 768px) { .lp-nav-links { display: none; } }
-@media (max-width: 480px) { .lp-nav { padding: 0 20px; } }
+@media (max-width: 480px) {
+  .lp-nav { padding: 0 16px; }
+  .lp-nav .logo-wrap { gap: 10px; }
+  .lp-nav .logo-text .tagline { display: none; }
+  .lp-nav-right { gap: 10px; }
+  .lp-nav-hiring { font-size: 12px; letter-spacing: 0.3px; }
+  .lp-nav-cta { padding: 9px 16px; font-size: 12px; }
+}
 
 /* ── Hero ── */
 .lp-hero {

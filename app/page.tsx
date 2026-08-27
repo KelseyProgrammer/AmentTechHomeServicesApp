@@ -177,11 +177,15 @@ export default function LandingPage() {
           <a href="#services">Services</a>
           <a href="#how-it-works">How It Works</a>
           <a href="#care-plans">Care Plans</a>
+          <a href="/careers">Careers</a>
           <a href="tel:+14079208035">(407) 920-8035</a>
         </div>
-        <button className="lp-nav-cta" onClick={openModal}>
-          Get a Quote
-        </button>
+        <div className="lp-nav-right">
+          <a href="/careers" className="lp-nav-hiring">We&apos;re Hiring</a>
+          <button className="lp-nav-cta" onClick={openModal}>
+            Get a Quote
+          </button>
+        </div>
       </nav>
 
       {/* ── SCROLL VIDEO HERO ── */}
@@ -366,6 +370,7 @@ export default function LandingPage() {
               <ul className="lp-footer-links">
                 <li><a href="tel:+14079208035">(407) 920-8035</a></li>
                 <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="/careers">Careers — We&apos;re Hiring</a></li>
                 <li>St. Augustine, FL 32080</li>
               </ul>
             </div>
