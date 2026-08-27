@@ -72,6 +72,97 @@ header {
   text-transform: uppercase;
 }
 .header-cta { display: flex; align-items: center; gap: 20px; }
+.header-nav-link {
+  color: rgba(255,255,255,0.72);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.header-nav-link:hover { color: var(--gold-light); }
+@media (max-width: 560px) {
+  .header-cta { gap: 14px; }
+  .header-cta .phone-link { display: none; }
+}
+
+/* ── About page ── */
+.about-grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 56px;
+  align-items: start;
+  margin: 48px 0 56px;
+}
+.about-polaroid {
+  background: #fff;
+  padding: 14px 14px 18px;
+  border-radius: 2px;
+  box-shadow: 0 12px 40px rgba(30,45,71,0.22);
+  transform: rotate(-2.5deg);
+}
+.about-polaroid-caption {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-style: italic;
+  text-align: center;
+  color: var(--navy);
+  font-size: 15px;
+  padding-top: 14px;
+}
+.about-story p:not(.section-title) {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text-mid);
+  margin-bottom: 18px;
+}
+.about-values {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 64px;
+}
+.about-value {
+  background: #fff;
+  border: 1px solid rgba(30,45,71,0.08);
+  border-radius: 12px;
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 18px rgba(30,45,71,0.06);
+}
+.about-value-icon { font-size: 26px; }
+.about-value strong { color: var(--navy); font-size: 15px; }
+.about-value span { font-size: 13px; line-height: 1.6; color: var(--text-mid); }
+.about-area { text-align: center; padding-bottom: 24px; }
+.about-cta-row {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+.about-cta-btn {
+  display: inline-block;
+  width: auto;
+  min-width: 200px;
+  text-align: center;
+  text-decoration: none;
+}
+.about-cta-btn--ghost {
+  background: transparent;
+  color: var(--navy);
+  border: 2px solid var(--navy);
+}
+.about-cta-btn--ghost:hover { background: var(--navy); color: #fff; }
+@media (max-width: 860px) {
+  .about-grid { grid-template-columns: 1fr; gap: 40px; }
+  .about-polaroid { max-width: 380px; margin: 0 auto; }
+  .about-values { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
+  .about-values { grid-template-columns: 1fr; }
+}
 .phone-link {
   color: var(--gold-light);
   text-decoration: none;

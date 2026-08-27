@@ -8,7 +8,7 @@ export default function BookPage() {
     <>
       <header>
         <div className="header-inner">
-          <div className="logo-wrap">
+          <a href="/" className="logo-wrap" style={{ textDecoration: 'none' }}>
             <Image
               src="/logo.png"
               alt="Ament Logo"
@@ -20,8 +20,9 @@ export default function BookPage() {
               <span className="brand">AMENT</span>
               <span className="tagline">Home &amp; Tech Services</span>
             </div>
-          </div>
+          </a>
           <div className="header-cta">
+            <a href="/" className="header-nav-link">Home</a>
             <a href="tel:+14079208035" className="phone-link">📞 (407) 920-8035</a>
           </div>
         </div>
