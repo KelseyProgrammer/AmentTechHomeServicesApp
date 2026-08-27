@@ -205,21 +205,24 @@ export default function LandingPage() {
             <span />
           </button>
         </div>
-        <div className="lp-nav-menu" aria-hidden={!menuOpen}>
-          <a href="#services" onClick={closeMenu}>Services</a>
-          <a href="#how-it-works" onClick={closeMenu}>How It Works</a>
-          <a href="#care-plans" onClick={closeMenu}>Care Plans</a>
-          <a href="/about" onClick={closeMenu}>About</a>
-          <a href="/careers" onClick={closeMenu}>Careers</a>
-          <a href="/careers" className="lp-nav-menu-hiring" onClick={closeMenu}>We&apos;re Hiring</a>
-          <button
-            className="lp-nav-cta lp-nav-menu-cta"
-            onClick={() => { closeMenu(); openModal() }}
-          >
-            Get a Quote
-          </button>
-        </div>
       </nav>
+
+      {/* Mobile menu lives outside the nav: the scrolled nav's backdrop-filter
+          would otherwise become the containing block for this fixed panel */}
+      <div className={`lp-nav-menu${menuOpen ? ' lp-nav-menu--open' : ''}`} aria-hidden={!menuOpen}>
+        <a href="#services" onClick={closeMenu}>Services</a>
+        <a href="#how-it-works" onClick={closeMenu}>How It Works</a>
+        <a href="#care-plans" onClick={closeMenu}>Care Plans</a>
+        <a href="/about" onClick={closeMenu}>About</a>
+        <a href="/careers" onClick={closeMenu}>Careers</a>
+        <a href="/careers" className="lp-nav-menu-hiring" onClick={closeMenu}>We&apos;re Hiring</a>
+        <button
+          className="lp-nav-cta lp-nav-menu-cta"
+          onClick={() => { closeMenu(); openModal() }}
+        >
+          Get a Quote
+        </button>
+      </div>
 
       {/* ── SCROLL VIDEO HERO ── */}
       <ScrollVideoSection
