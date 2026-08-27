@@ -130,8 +130,17 @@ const TRUST_ITEMS = [
 
 export default function LandingPage() {
   const [modalOpen, setModalOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const navRef = useRef<HTMLElement>(null)
   const openModal = useCallback(() => setModalOpen(true), [])
+  const closeMenu = useCallback(() => setMenuOpen(false), [])
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : ''
+    // React re-renders rewrite className, so re-apply the scroll state
+    navRef.current?.classList.toggle('lp-nav--scrolled', window.scrollY > 60)
+    return () => { document.body.style.overflow = '' }
+  }, [menuOpen])
 
   useEffect(() => {
     const onScroll = () => navRef.current?.classList.toggle('lp-nav--scrolled', window.scrollY > 60)
@@ -158,7 +167,7 @@ export default function LandingPage() {
   return (
     <>
       {/* ── FLOATING NAV ── */}
-      <nav ref={navRef} className="lp-nav">
+      <nav ref={navRef} className={`lp-nav${menuOpen ? ' lp-nav--open' : ''}`}>
         <div className="logo-wrap">
           <Image
             src="/logo.png"
@@ -183,6 +192,30 @@ export default function LandingPage() {
         <div className="lp-nav-right">
           <a href="/careers" className="lp-nav-hiring">We&apos;re Hiring</a>
           <button className="lp-nav-cta" onClick={openModal}>
+            Get a Quote
+          </button>
+          <button
+            className="lp-nav-burger"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(open => !open)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        </div>
+        <div className="lp-nav-menu" aria-hidden={!menuOpen}>
+          <a href="#services" onClick={closeMenu}>Services</a>
+          <a href="#how-it-works" onClick={closeMenu}>How It Works</a>
+          <a href="#care-plans" onClick={closeMenu}>Care Plans</a>
+          <a href="/about" onClick={closeMenu}>About</a>
+          <a href="/careers" onClick={closeMenu}>Careers</a>
+          <a href="/careers" className="lp-nav-menu-hiring" onClick={closeMenu}>We&apos;re Hiring</a>
+          <button
+            className="lp-nav-cta lp-nav-menu-cta"
+            onClick={() => { closeMenu(); openModal() }}
+          >
             Get a Quote
           </button>
         </div>
