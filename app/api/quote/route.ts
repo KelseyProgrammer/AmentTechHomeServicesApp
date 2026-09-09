@@ -27,15 +27,21 @@ type ClaudeEstimate = {
 const PRICING_CONTEXT = `
 AMENT PRICING REFERENCE (use as guardrails — actual quotes vary by property):
 
-Security & Surveillance ("labor-only" = customer supplies hardware; "supplied" = Ament provides hardware):
-- Video Doorbell: labor-only from $150; Ament-supplied dual-lens smart doorbell from $350 installed
-- Single exterior camera: labor-only from $125; Ament-supplied IP camera from $295 installed
-- 4-camera PoE NVR system: labor-only from $775; Ament-supplied 4K system from $1,695 installed
-- Pro NVR system (8+ cameras): labor-only from $2,750; Ament-supplied from $3,950 installed
+Security & Surveillance ("labor-only" = customer supplies hardware; "supplied" = Ament provides hardware).
+INSTALLED PACKAGES (current published pricing — anchor supplied-hardware quotes to these):
+- Good — 4-Camera Essentials (4x entry-tier cams, 4-ch NVR): $2,199 installed
+- Better — 6-Camera Complete (6x standard-tier cams, 8-ch NVR): $3,950 installed
+- Best — 8-Camera Pro (8x premium-tier cams, 16-ch NVR): $6,299 installed
+- Package add-ons: additional standard camera $350; premium camera $450; PTZ camera $950; license-plate-recognition camera $1,450
+Other security services:
+- Video Doorbell: labor-only from $150; Ament-supplied smart doorbell $375 installed
+- Single exterior camera (no package): labor-only from $125; Ament-supplied from $350 installed
+- 4-camera system, labor-only (customer hardware): from $775
+- 8+ camera system, labor-only (customer hardware): from $2,750
 - Smart lock installation: from $150
 - Alarm system setup (SimpliSafe, Ring): from $225
 - Network security audit & hardening: from $187
-- If the customer indicates they already have equipment, quote the labor-only track; if Ament supplies, quote the supplied track.
+- If the customer indicates they already have equipment, quote the labor-only track; if Ament supplies, quote from the packages above.
 
 Smart Automation & AI:
 - Smart home consultation (2 hrs): from $300
@@ -55,7 +61,7 @@ Connectivity & Setup:
 
 Smart Home & Pro Systems:
 - Whole-home automation: from $1,650
-- Pro camera system (NVR/DVR, 8+): from $2,750
+- Pro camera system (8+ cameras, Ament-supplied): $6,299 installed (Best package); labor-only from $2,750
 - STR/Airbnb full package: from $1,275
 - Business tech setup: from $1,200
 
@@ -115,8 +121,9 @@ PRICING POLICY (locked August 2026):
   fee; if it cannot, raise the range rather than squeeze the margin.
 - Customer-supplied hardware: labor-only pricing at the same labor rates, no
   hardware warranty; do not discount below the labor-only guardrails.
-- PTZ, LPR, fisheye, solar/cellular, or access control gear: flag as "custom
-  quote — needs discovery call" rather than guessing a range.
+- PTZ ($950) and LPR ($1,450) have published add-on prices when added to a
+  package; standalone PTZ/LPR, fisheye, solar/cellular, or access control gear:
+  flag as "custom quote — needs discovery call" rather than guessing a range.
 `
 
 function escapeHtml(s: string): string {
@@ -183,7 +190,7 @@ export async function POST(req: NextRequest) {
 {
   "scopeSummary": "2-3 sentences describing what the customer needs",
   "complexityNotes": "1-2 sentences about complexity or special considerations the tech should know",
-  "recommendedPriceRange": "e.g. '$775–1,200' — a realistic installed range based on the answers and pricing reference",
+  "recommendedPriceRange": "e.g. '$2,199–2,800' — a realistic installed range based on the answers and pricing reference",
   "followUpQuestions": ["specific question 1", "specific question 2", "specific question 3", "specific question 4"]
 }
 
