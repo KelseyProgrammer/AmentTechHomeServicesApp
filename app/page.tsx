@@ -184,7 +184,6 @@ export default function LandingPage() {
           <a href="#how-it-works">How It Works</a>
           <a href="#care-plans">Care Plans</a>
           <a href="/about">About</a>
-          <a href="/careers">Careers</a>
         </div>
         <div className="lp-nav-right">
           <a href="/careers" className="lp-nav-hiring">We&apos;re Hiring</a>
@@ -211,7 +210,6 @@ export default function LandingPage() {
         <a href="#how-it-works" onClick={closeMenu}>How It Works</a>
         <a href="#care-plans" onClick={closeMenu}>Care Plans</a>
         <a href="/about" onClick={closeMenu}>About</a>
-        <a href="/careers" onClick={closeMenu}>Careers</a>
         <a href="/careers" className="lp-nav-menu-hiring" onClick={closeMenu}>We&apos;re Hiring</a>
         <button
           className="lp-nav-cta lp-nav-menu-cta"
