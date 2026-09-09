@@ -18,7 +18,7 @@ const lato = Lato({
 
 export const metadata: Metadata = {
   title: 'Ament Home & Tech Services — CCTV Installation & AI Automation | St. Augustine, FL',
-  description: 'Professional CCTV and security camera installation, AI home automation, smart home systems, and tech setup in Greater St. Augustine, FL. Get a custom quote — scoped to your project, no fixed price lists.',
+  description: 'Professional CCTV and security camera installation, AI home automation, smart home systems, and tech setup in Greater St. Augustine, FL. Installed camera packages from $2,199 — or get a custom quote scoped to your project.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

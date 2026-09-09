@@ -12,6 +12,13 @@
 .env.local
 .env.*.local
 
+# internal business docs — owners only, never publish
+BUSINESS_PLAN.md
+FINANCIALS.md
+EXPENSES.md
+Ament_Full_Pricing_Reference.md
+ament-site-pivot-prompt.md
+
 # misc
 .DS_Store
 *.pem

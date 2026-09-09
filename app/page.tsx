@@ -16,13 +16,13 @@ const SERVICES_DATA = [
     eyebrow: 'Flagship Service',
     badge: 'Most Requested',
     featured: true,
-    startingAt: 'Systems from $775',
+    startingAt: 'Installed systems from $2,199',
     customQuote: false,
     services: [
-      'CCTV Camera System Installation',
-      'Video Doorbell Installation',
-      'Exterior Camera Packages (4-cam, 8-cam, custom)',
-      'Pro NVR/DVR Systems',
+      '4-Camera Essentials Package — $2,199 installed',
+      '6-Camera Complete Package — $3,950 installed',
+      '8-Camera Pro Package — $6,299 installed',
+      'Video Doorbell Installation — $375',
       'Smart Lock Installation & Setup',
       'Alarm System Setup (SimpliSafe & more)',
       'Network Security Audit & Hardening',
@@ -87,10 +87,9 @@ const PLANS_DATA = [
     period: '/mo',
     annual: 'or $299/yr',
     perks: [
-      'Priority scheduling',
-      '10% off all labor',
-      'Annual remote check-in',
-      'Dedicated support line',
+      'Remote system check-ins',
+      'Firmware & software updates',
+      'Priority phone support',
     ],
   },
   {
@@ -100,9 +99,8 @@ const PLANS_DATA = [
     annual: 'or $599/yr',
     perks: [
       'All Connect Care benefits',
-      'Annual on-site inspection',
-      'Firmware & software updates',
-      'Camera health monitoring',
+      'Quarterly on-site inspection',
+      'Camera cleaning every visit',
     ],
   },
   {
@@ -112,9 +110,8 @@ const PLANS_DATA = [
     annual: 'or $999/yr',
     perks: [
       'All Secure Care benefits',
-      'Quarterly on-site visits',
-      '24-hour response guarantee',
-      'Full system optimization',
+      'Priority same-week scheduling',
+      'Annual full system refresh',
     ],
   },
 ]
